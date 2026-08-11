@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Calculator from '../components/Calculator.astro';
+import { siteConfig } from '../config/site';
+const title = "Unit Price Calculator – Compare Prices & Find the Better Deal | Which Deal's Better?";
+const description = 'Compare unit prices, product quantities, multipacks, ounces, pounds, liters, counts, and more to quickly find the lowest unit cost.';
+const faqs = [
+  ['What is unit price?', 'Unit price is the cost of one standard unit—such as one ounce, item, or milliliter. It makes differently sized packages easier to compare.'],
+  ['How do I compare products with different quantities?', 'Enter the price, quantity, and unit for each option. For a multipack, turn on “This is a multipack,” then enter the number of items in the pack and the quantity per item.'],
+  ['Can I compare ounces and pounds?', 'Yes. Ounces and pounds are converted to a shared unit automatically.'],
+  ['Can I compare grams and kilograms?', 'Yes. Kilograms are converted to grams before the prices are compared.'],
+  ['Can I compare liters and milliliters?', 'Yes. Liters, milliliters, and U.S. liquid-volume units can be compared automatically.'],
+  ['Can I compare multipacks?', 'Yes. Turn on “This is a multipack,” then enter the number of items in the pack and the quantity per item. The calculator multiplies them automatically.'],
+  ['Can I compare more than two products?', 'Yes. Add up to five deals and the calculator will rank their unit prices.'],
+  ['Does a larger package always cost less?', 'No. Promotions, brand pricing, and package design can make a smaller option cheaper per unit.'],
+  ['Does the calculator save my shopping information?', 'No. Your calculator entries are processed locally in your browser and are not sent to our server. No account is required.'],
+];
+const schema = [
+  { '@context':'https://schema.org', '@type':'WebSite', name:siteConfig.name, url:siteConfig.url },
+  { '@context':'https://schema.org', '@type':'WebApplication', name:siteConfig.name, url:siteConfig.url, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}, description },
+  { '@context':'https://schema.org', '@type':'FAQPage', mainEntity:faqs.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}})) },
+];
+---
+<BaseLayout {title} {description} {schema}>
+  <section class="hero"><div class="shell hero-inner"><p class="eyebrow">Shop with the math done</p><h1>Which Deal's Better?</h1><p class="tagline">{siteConfig.tagline}</p></div></section>
+  <div class="shell calculator-wrap"><Calculator /></div>
+  <section class="content-section alt"><div class="shell"><div class="prose"><p class="eyebrow">The simple idea</p><h2>How to compare unit prices</h2><p>Unit price strips away quantity confusion. For a regular product, divide the price by its quantity. For a multipack, first multiply the number of items in the pack by the quantity per item.</p><p class="formula">Price ÷ total quantity = unit price</p></div><div class="feature-grid"><article class="info-card"><h3>Bigger isn't always cheaper</h3><p>A larger box can cost more per ounce or item. Compare the unit price instead of trusting the displayed quantity.</p></article><article class="info-card"><h3>Multipacks made easy</h3><p>Turn on the multipack option for 24 cans × 12 fl oz or 12 rolls × 150 sheets. Enter the number of items in the pack and quantity per item; we calculate the total.</p></article><article class="info-card"><h3>Different units, normalized</h3><p>Compare oz with lb, g with kg, and mL with L. Compatible measures convert automatically.</p></article></div></div></section>
+  <section class="content-section"><div class="shell prose"><p class="eyebrow">Real shopping situations</p><h2>Comparing sale bundles</h2><p>For “2 for $10,” enter $10 as the price, turn on the multipack option, and enter 2 as the number of items in the pack. Do the same for “3 for $14.” Enter how much each item contains under “Quantity per item.”</p><h2>Compare like with like</h2><p>The calculator compares compatible units and warns you when they describe different things. Weight cannot be fairly compared with volume, for example. Shopper-friendly units such as pods, rolls, sheets, bottles, and cans are treated as comparable individual items.</p></div></section>
+  <section class="content-section alt faq"><div class="shell prose"><p class="eyebrow">Questions, answered</p><h2>Frequently asked questions</h2>{faqs.map(([q,a])=><details><summary>{q}</summary><p>{a}</p></details>)}</div></section>
+</BaseLayout>

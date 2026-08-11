@@ -1,0 +1,89 @@
+---
+import { unitGroups } from '../lib/units';
+---
+<section class="calculator-panel" aria-labelledby="calculator-title" data-calculator>
+  <div class="calculator-heading"><div><p class="eyebrow">Unit price calculator</p><h2 id="calculator-title">Compare your deals</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
+  <p class="helper">Enter each product's price, quantity, and unit. If it contains several items, turn on the multipack option.</p>
+  <div class="deal-grid" data-deals></div>
+  <div class="calculator-actions"><button class="add-button" type="button" data-add>+ Add another deal</button><span class="deal-limit">Compare up to 5 deals</span></div>
+  <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter the price and quantity for both deals to see which one wins.</p></div>
+</section>
+
+<template id="deal-template">
+  <fieldset class="deal-card">
+    <legend><span data-deal-label>Deal</span><span class="winner-badge" data-winner hidden>Best deal</span></legend>
+    <button class="remove-button" type="button" data-remove aria-label="Remove deal">Remove</button>
+    <label class="full-field">Product name <span>(optional)</span><input type="text" data-field="name" maxlength="80" placeholder="Paper towels" autocomplete="off" /></label>
+    <label class="full-field">Price <span class="input-prefix"><span aria-hidden="true">$</span><input type="number" data-field="price" min="0.01" step="0.01" inputmode="decimal" placeholder="8.99" autocomplete="off" /></span></label>
+    <div class="field-row quantity-row">
+      <label><span data-size-label>Quantity</span><input type="number" data-field="quantity" min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
+      <label>Unit <select data-field="unit">{unitGroups.map(({ group, units }) => <optgroup label={group}>{units.map((unit) => <option value={unit.value}>{unit.label}</option>)}</optgroup>)}</select></label>
+    </div>
+    <label class="multipack-toggle"><input type="checkbox" data-multipack /> <span>This is a multipack</span></label>
+    <div class="multipack-fields" data-multipack-fields hidden>
+      <label>Number of items in pack <input type="number" data-field="packages" min="1" step="1" inputmode="numeric" value="1" autocomplete="off" /></label>
+    </div>
+    <p class="deal-example" data-deal-example aria-live="polite"></p>
+    <p class="deal-unit-price" data-unit-price>Waiting for details</p>
+  </fieldset>
+</template>
+<style>
+  .multipack-toggle{display:flex!important;grid-template-columns:auto 1fr;align-items:center;gap:.65rem;min-height:44px;margin:.15rem 0;cursor:pointer}
+  .multipack-toggle input{width:1.25rem;height:1.25rem;min-height:auto;margin:0;accent-color:var(--ink)}
+  .multipack-toggle span{font-size:.9rem!important;font-weight:750!important;color:var(--ink)!important}
+  .multipack-fields{margin:.65rem 0}
+  .multipack-fields label{max-width:12rem}
+  .deal-example{min-height:1.5rem;margin:.6rem 0 0;color:var(--ink-soft);font-size:.88rem;font-weight:700}
+</style>
+<script>
+  import { compareDeals, formatUnitPrice, packageMultiplier } from '../lib/calculator';
+  import { unitMap } from '../lib/units';
+  const root = document.querySelector('[data-calculator]');
+  if (root instanceof HTMLElement) {
+    const dealsEl = root.querySelector('[data-deals]');
+    const resultsEl = root.querySelector('[data-results]');
+    const template = document.querySelector('#deal-template');
+    const addButton = root.querySelector('[data-add]');
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const cards = () => [...root.querySelectorAll('.deal-card')];
+    function addDeal() {
+      if (!(dealsEl instanceof HTMLElement) || !(template instanceof HTMLTemplateElement) || cards().length >= 5) return;
+      dealsEl.append(template.content.cloneNode(true)); relabel(); update();
+    }
+    function relabel() {
+      cards().forEach((card, index) => { const label = card.querySelector('[data-deal-label]'); if (label) label.textContent = `Deal ${letters[index]}`; const remove = card.querySelector('[data-remove]'); if (remove instanceof HTMLButtonElement) { remove.hidden = cards().length <= 2; remove.setAttribute('aria-label', `Remove Deal ${letters[index]}`); } });
+      if (addButton instanceof HTMLButtonElement) addButton.disabled = cards().length >= 5;
+    }
+    function update() {
+      const inputs = cards().map((card) => {
+        const values = Object.fromEntries([...card.querySelectorAll('[data-field]')].map((el) => [el.getAttribute('data-field'), el instanceof HTMLInputElement || el instanceof HTMLSelectElement ? el.value : '']));
+        const multipack = card.querySelector('[data-multipack]');
+        values.packages = packageMultiplier(multipack instanceof HTMLInputElement && multipack.checked, values.packages);
+        return values;
+      });
+      const result = compareDeals(inputs as any);
+      cards().forEach((card, index) => {
+        const multipack = card.querySelector('[data-multipack]'); const isMultipack = multipack instanceof HTMLInputElement && multipack.checked;
+        const fields = card.querySelector('[data-multipack-fields]'); if (fields instanceof HTMLElement) fields.hidden = !isMultipack;
+        const sizeLabel = card.querySelector('[data-size-label]'); if (sizeLabel) sizeLabel.textContent = isMultipack ? 'Quantity per item' : 'Quantity';
+        const raw = inputs[index] as any; const example = card.querySelector('[data-deal-example]'); const unitLabel = unitMap.get(raw.unit)?.label;
+        if (example) example.textContent = raw.price && raw.quantity ? `$${raw.price} for ${isMultipack && raw.packages ? `${raw.packages} × ` : ''}${raw.quantity} ${unitLabel}` : '';
+        card.classList.remove('is-winner'); const badge = card.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = true;
+        const calculated = result.deals.find((deal) => deal.index === index); const output = card.querySelector('[data-unit-price]');
+        if (output) output.textContent = calculated ? `${formatUnitPrice(calculated.unitPrice)}/${unitMap.get(calculated.unit)?.baseLabel}` : 'Waiting for details';
+      });
+      if (!(resultsEl instanceof HTMLElement)) return;
+      if (result.status === 'incomplete') { resultsEl.innerHTML = '<p class="results-empty">Enter the price and quantity for both deals to see which one wins.</p>'; return; }
+      if (result.status === 'invalid') { resultsEl.innerHTML = '<p class="results-alert"><strong>Check the details.</strong> Every deal needs a price and quantity greater than zero. Multipacks also need the number of items in the pack.</p>'; return; }
+      if (result.status === 'incompatible') { resultsEl.innerHTML = `<p class="results-alert"><strong>Units don't match.</strong> ${result.message}</p>`; return; }
+      const lines = result.deals.map((deal) => `<li><span>Deal ${letters[deal.index]}${deal.name ? ` · ${escapeText(String(deal.name))}` : ''}</span><strong>${formatUnitPrice(deal.unitPrice)}/${unitMap.get(deal.unit)?.baseLabel}</strong></li>`).join('');
+      if (result.status === 'tie') resultsEl.innerHTML = `<p class="eyebrow">Tied best deal</p><h3>These deals cost the same per unit</h3><ul>${lines}</ul>`;
+      else { const winner = result.winners[0]; const label = `Deal ${letters[winner.index]}`; resultsEl.innerHTML = `<p class="eyebrow">Best deal</p><h3>${label}${winner.name ? ` · ${escapeText(String(winner.name))}` : ''}</h3><ul>${lines}</ul><p class="advantage">${label} costs <strong>${formatPercent(result.advantagePercent ?? 0)} less</strong> per ${unitMap.get(winner.unit)?.longLabel} than the next-best deal.</p>`; const card = cards()[winner.index]; card?.classList.add('is-winner'); const badge = card?.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = false; }
+    }
+    const escapeText = (value: string) => value.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char] || char);
+    const formatPercent = (value: number) => `${new Intl.NumberFormat('en-US', { maximumFractionDigits: value < 1 ? 1 : 0 }).format(value)}%`;
+    root.addEventListener('input', update); root.addEventListener('change', update);
+    root.addEventListener('click', (event) => { const target = event.target; if (!(target instanceof Element)) return; if (target.closest('[data-add]')) addDeal(); if (target.closest('[data-reset]')) { if (dealsEl instanceof HTMLElement) dealsEl.innerHTML = ''; addDeal(); addDeal(); } if (target.closest('[data-remove]') && cards().length > 2) { target.closest('.deal-card')?.remove(); relabel(); update(); } });
+    addDeal(); addDeal();
+  }
+</script>

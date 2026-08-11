@@ -1,0 +1,16 @@
+---
+import { siteConfig } from '../config/site';
+---
+<header class="site-header">
+  <div class="shell header-inner">
+    <a class="brand" href="/" aria-label={`${siteConfig.name} home`}><img class="brand-mark" src="/favicon.svg" width="28" height="28" alt="" /> <span>{siteConfig.name}</span></a>
+    <nav aria-label="Primary navigation">
+      <a href="/">Home</a><a href="/about/">About</a><a href="/contact/">Contact</a>
+    </nav>
+  </div>
+</header>
+<style>
+  .brand{display:inline-flex;align-items:center;gap:.5rem;line-height:1.1}
+  .brand span{color:inherit}
+  .brand-mark{display:block;width:1.65rem;height:1.65rem;flex:0 0 auto}
+</style>

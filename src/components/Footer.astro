@@ -1,0 +1,10 @@
+---
+import { siteConfig } from '../config/site';
+---
+<footer class="site-footer">
+  <div class="shell footer-inner">
+    <div><strong>{siteConfig.name}</strong><p>Smarter comparisons for everyday shopping.</p></div>
+    <nav aria-label="Footer navigation"><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>
+    <small>© {new Date().getFullYear()} {siteConfig.name}</small>
+  </div>
+</footer>

@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Contact | Which Deal's Better?" description="Send a question or comment to the Which Deal's Better team.">
+  <section class="content-section"><div class="shell prose"><p class="eyebrow">Get in touch</p><h1>Contact us</h1><p>Found something confusing, have a suggestion, or want to report a problem? Send a note below. Please do not include sensitive financial or personal information.</p>
+    <form class="contact-form" data-contact-form action="/api/contact" method="post">
+      <label>Name<input name="name" type="text" maxlength="80" autocomplete="name" required /></label>
+      <label>Email<input name="email" type="email" maxlength="254" autocomplete="email" required /></label>
+      <label>Message<textarea name="message" maxlength="5000" required></textarea></label>
+      <label class="honeypot" aria-hidden="true">Website<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+      <button class="primary-button" type="submit">Send message</button>
+      <p class="form-status" data-form-status aria-live="polite" hidden></p>
+    </form>
+  </div></section>
+</BaseLayout>
+<script>
+  const form = document.querySelector('[data-contact-form]');
+  const status = document.querySelector('[data-form-status]');
+  if (form instanceof HTMLFormElement && status instanceof HTMLElement) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault(); const button = form.querySelector('button[type="submit"]');
+      if (button instanceof HTMLButtonElement) { button.disabled = true; button.textContent = 'Sending…'; }
+      status.hidden = true;
+      try {
+        const response = await fetch(form.action, { method: 'POST', headers: { 'content-type': 'application/json', 'accept': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+        const data = await response.json().catch(() => ({}));
+        status.textContent = data.message || (response.ok ? 'Thanks—your message was sent.' : 'We could not send your message. Please try again.'); status.dataset.state = response.ok ? 'success' : 'error'; status.hidden = false;
+        if (response.ok) form.reset();
+      } catch { status.textContent = 'We could not connect. Check your connection and try again.'; status.dataset.state = 'error'; status.hidden = false; }
+      finally { if (button instanceof HTMLButtonElement) { button.disabled = false; button.textContent = 'Send message'; } }
+    });
+  }
+</script>
