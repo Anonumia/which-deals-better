@@ -55,7 +55,7 @@ import { unitGroups } from '../lib/units';
     .keypad-grid button{min-width:0;min-height:48px;border:1px solid var(--line);border-radius:11px;background:#f7f8f4;font-size:1.15rem;font-weight:800;touch-action:manipulation}
     .keypad-grid button:active{background:var(--mint)}
     .keypad-grid .keypad-done{grid-column:1/-1;background:var(--ink);color:#fff}
-    .mobile-result-bar{position:fixed;z-index:49;right:.75rem;bottom:calc(.75rem + var(--mobile-keypad-height, 0px) + .5rem);left:.75rem;display:flex;align-items:center;justify-content:center;max-width:25rem;min-height:44px;margin-inline:auto;padding:.5rem .85rem;border:1px solid #e66e00;border-radius:12px;background:#ff7a00;color:#fff;box-shadow:0 5px 14px rgba(24,57,47,.16);font-size:clamp(.78rem,3.8vw,1rem);font-weight:900;text-align:center;white-space:nowrap}
+    .mobile-result-bar{position:fixed;z-index:49;right:.75rem;bottom:calc(.75rem + var(--mobile-keypad-height, 0px) + .5rem);left:.75rem;display:flex;align-items:center;justify-content:center;max-width:25rem;min-height:44px;margin-inline:auto;padding:.5rem;border:1px solid #e66e00;border-radius:12px;background:#ff7a00;color:#fff;box-shadow:0 5px 14px rgba(24,57,47,.16);font-size:clamp(.875rem,4.25vw,1.0625rem);font-weight:900;text-align:center;white-space:nowrap}
     .mobile-result-bar[hidden]{display:none}
   }
 </style>
@@ -136,7 +136,13 @@ import { unitGroups } from '../lib/units';
       const overlayTop = keypad.getBoundingClientRect().top - resultHeight;
       if (inputRect.bottom > overlayTop - 12) window.scrollBy({ top: inputRect.bottom - overlayTop + 12, behavior: 'smooth' });
     };
-    const closeKeypad = () => { if (keypad instanceof HTMLElement) keypad.hidden = true; activeNumericInput = null; syncMobileOverlay(); };
+    const closeKeypad = () => {
+      if (keypad instanceof HTMLElement) keypad.hidden = true;
+      const previousNumericInput = activeNumericInput;
+      activeNumericInput = null;
+      if (previousNumericInput && previousNumericInput === document.activeElement) previousNumericInput.blur();
+      syncMobileOverlay();
+    };
     const configureMobileInputs = () => {
       root.querySelectorAll('input[data-numeric-input]').forEach((input) => {
         if (!(input instanceof HTMLInputElement)) return;
