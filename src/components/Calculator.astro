@@ -24,14 +24,14 @@ import { unitGroups } from '../lib/units';
     <legend><span data-deal-label>Deal</span><span class="winner-badge" data-winner hidden>Best deal</span></legend>
     <button class="remove-button" type="button" data-remove aria-label="Remove deal">Remove</button>
     <label class="full-field">Product name <span>(optional)</span><input type="text" data-field="name" maxlength="80" placeholder="Paper towels" autocomplete="off" /></label>
-    <label class="full-field">Price <span class="input-prefix"><span aria-hidden="true">$</span><input type="number" data-field="price" min="0.01" step="0.01" inputmode="decimal" placeholder="8.99" autocomplete="off" /></span></label>
+    <label class="full-field">Price <span class="input-prefix"><span aria-hidden="true">$</span><input type="number" data-field="price" data-numeric-input min="0.01" step="0.01" inputmode="decimal" placeholder="8.99" autocomplete="off" /></span></label>
     <div class="field-row quantity-row">
-      <label><span data-size-label>Quantity</span><input type="number" data-field="quantity" min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
+      <label><span data-size-label>Quantity</span><input type="number" data-field="quantity" data-numeric-input min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
       <label>Unit <select data-field="unit">{unitGroups.map(({ group, units }) => <optgroup label={group}>{units.map((unit) => <option value={unit.value}>{unit.label}</option>)}</optgroup>)}</select></label>
     </div>
     <label class="multipack-toggle"><input type="checkbox" data-multipack /> <span>This is a multipack</span></label>
     <div class="multipack-fields" data-multipack-fields hidden>
-      <label>Number of items in pack <input type="number" data-field="packages" min="1" step="1" inputmode="numeric" value="1" autocomplete="off" /></label>
+      <label>Number of items in pack <input type="number" data-field="packages" data-numeric-input min="1" step="1" inputmode="numeric" value="1" autocomplete="off" /></label>
     </div>
     <p class="deal-example" data-deal-example aria-live="polite"></p>
     <p class="deal-unit-price" data-unit-price>Waiting for details</p>
@@ -48,6 +48,7 @@ import { unitGroups } from '../lib/units';
   .mobile-result-bar{display:none}
   @media(max-width:759px){
     :global(.deal-card input::placeholder){color:transparent;opacity:0}
+    :global(.deal-card input[data-numeric-input]){font-size:1.1rem;font-weight:700}
     .mobile-keypad{position:fixed;z-index:50;right:.75rem;bottom:.75rem;left:.75rem;display:block;max-width:25rem;margin-inline:auto;padding:.65rem;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 16px 50px rgba(24,57,47,.24)}
     .mobile-keypad[hidden]{display:none}
     .keypad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
@@ -137,8 +138,9 @@ import { unitGroups } from '../lib/units';
     };
     const closeKeypad = () => { if (keypad instanceof HTMLElement) keypad.hidden = true; activeNumericInput = null; syncMobileOverlay(); };
     const configureMobileInputs = () => {
-      root.querySelectorAll('input[type="number"]').forEach((input) => {
+      root.querySelectorAll('input[data-numeric-input]').forEach((input) => {
         if (!(input instanceof HTMLInputElement)) return;
+        input.type = mobileQuery.matches ? 'text' : 'number';
         input.readOnly = mobileQuery.matches;
         if (mobileQuery.matches) input.setAttribute('inputmode', 'none');
         else input.setAttribute('inputmode', input.dataset.field === 'packages' ? 'numeric' : 'decimal');
@@ -155,7 +157,7 @@ import { unitGroups } from '../lib/units';
       activeNumericInput.dispatchEvent(new Event('input', { bubbles: true }));
     };
     root.addEventListener('input', update); root.addEventListener('change', update);
-    root.addEventListener('focusin', (event) => { const target = event.target; if (mobileQuery.matches && target instanceof HTMLInputElement && target.type === 'number') { activeNumericInput = target; if (keypad instanceof HTMLElement) keypad.hidden = false; syncMobileOverlay(); requestAnimationFrame(keepActiveInputVisible); } });
+    root.addEventListener('focusin', (event) => { const target = event.target; if (mobileQuery.matches && target instanceof HTMLInputElement && target.hasAttribute('data-numeric-input')) { activeNumericInput = target; if (keypad instanceof HTMLElement) keypad.hidden = false; syncMobileOverlay(); requestAnimationFrame(keepActiveInputVisible); } });
     keypad?.addEventListener('pointerdown', (event) => event.preventDefault());
     keypad?.addEventListener('click', (event) => { const target = event.target; if (target instanceof HTMLButtonElement && target.dataset.key) enterKey(target.dataset.key); });
     root.addEventListener('click', (event) => { const target = event.target; if (!(target instanceof Element)) return; if (target.closest('[data-add]')) addDeal(); if (target.closest('[data-reset]')) { if (dealsEl instanceof HTMLElement) dealsEl.innerHTML = ''; addDeal(); addDeal(); } if (target.closest('[data-remove]') && cards().length > 2) { target.closest('.deal-card')?.remove(); relabel(); update(); } });
