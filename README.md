@@ -24,8 +24,8 @@ npm run build
 The endpoint at `functions/api/contact.ts` is a Cloudflare Pages Function that sends mail through Brevo. Configure these Cloudflare Pages environment variables; never commit their values:
 
 - `BREVO_API_KEY`
-- `CONTACT_RECIPIENT_EMAIL`
-- `CONTACT_SENDER_EMAIL` (a Brevo-verified sender)
+- `CONTACT_TO_EMAIL`
+- `CONTACT_FROM_EMAIL` (a Brevo-verified sender)
 
 Visitor email addresses are used only as `Reply-To`. Local builds do not send email.
 

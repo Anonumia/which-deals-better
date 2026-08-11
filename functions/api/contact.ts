@@ -1,4 +1,4 @@
-interface Env { BREVO_API_KEY?: string; CONTACT_RECIPIENT_EMAIL?: string; CONTACT_SENDER_EMAIL?: string; }
+interface Env { BREVO_API_KEY?: string; CONTACT_TO_EMAIL?: string; CONTACT_FROM_EMAIL?: string; }
 interface ContactPayload { name?: unknown; email?: unknown; message?: unknown; website?: unknown; }
 interface PagesContext { request: Request; env: Env; }
 
@@ -28,8 +28,8 @@ export function validateContact(input: ContactPayload) {
 
 export function buildBrevoRequest(data: { name: string; email: string; message: string }, env: Required<Env>, timestamp: string) {
   return {
-    sender: { name: "Which Deal's Better?", email: env.CONTACT_SENDER_EMAIL },
-    to: [{ email: env.CONTACT_RECIPIENT_EMAIL }],
+    sender: { name: "Which Deal's Better?", email: env.CONTACT_FROM_EMAIL },
+    to: [{ email: env.CONTACT_TO_EMAIL }],
     replyTo: { name: data.name, email: data.email },
     subject: `Website message from ${data.name}`,
     htmlContent: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#18392f"><h1 style="font-size:22px">New message for Which Deal's Better?</h1><p><strong>From:</strong> ${escapeHtml(data.name)} &lt;${escapeHtml(data.email)}&gt;</p><p><strong>Submitted:</strong> ${escapeHtml(timestamp)}</p><hr><p style="white-space:pre-wrap">${escapeHtml(data.message)}</p></div>`,
@@ -42,7 +42,7 @@ export async function onRequestPost({ request, env }: PagesContext): Promise<Res
   try { payload = await request.json() as ContactPayload; } catch { return json(400, 'The form data could not be read.'); }
   const validated = validateContact(payload);
   if (!validated.ok) return json(validated.status, validated.message);
-  if (!env.BREVO_API_KEY || !env.CONTACT_RECIPIENT_EMAIL || !env.CONTACT_SENDER_EMAIL) return json(503, 'Contact is temporarily unavailable. Please try again later.');
+  if (!env.BREVO_API_KEY || !env.CONTACT_TO_EMAIL || !env.CONTACT_FROM_EMAIL) return json(503, 'Contact is temporarily unavailable. Please try again later.');
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const now = Date.now(); const recent = (rateLimit.get(ip) || []).filter((time) => now - time < WINDOW_MS);
   if (recent.length >= MAX_REQUESTS) return json(429, 'Too many messages were submitted. Please wait and try again.');
