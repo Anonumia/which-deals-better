@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="Contact | Which Deal's Better?" description="Send a question or comment to the Which Deal's Better team.">
   <section class="content-section"><div class="shell prose"><p class="eyebrow">Get in touch</p><h1>Contact us</h1><p>Found something confusing, have a suggestion, or want to report a problem? Send a note below. Please do not include sensitive financial or personal information.</p>
     <form class="contact-form" data-contact-form action="/api/contact" method="post">
-      <label>Name<input name="name" type="text" maxlength="80" autocomplete="name" required /></label>
+      <label>Name (optional)<input name="name" type="text" maxlength="80" autocomplete="name" /></label>
       <label>Email<input name="email" type="email" maxlength="254" autocomplete="email" required /></label>
       <label>Message<textarea name="message" maxlength="5000" required></textarea></label>
       <label class="honeypot" aria-hidden="true">Website<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
