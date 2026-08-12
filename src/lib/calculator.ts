@@ -10,8 +10,17 @@ const positiveNumber = (value: unknown): number | null => {
   return Number.isFinite(number) && number > 0 ? number : null;
 };
 
+const positiveInteger = (value: unknown): number | null => {
+  const number = positiveNumber(value);
+  return number !== null && Number.isInteger(number) ? number : null;
+};
+
 export function packageMultiplier(isMultipack: boolean, numberInPack: unknown): unknown {
   return isMultipack ? numberInPack : 1;
+}
+
+export function initialPackageCount(isMobile: boolean): string {
+  return isMobile ? '1' : '';
 }
 
 export function compareDeals(inputs: DealInput[]): ComparisonResult {
@@ -20,7 +29,7 @@ export function compareDeals(inputs: DealInput[]): ComparisonResult {
   for (let index = 0; index < inputs.length; index += 1) {
     const deal = inputs[index];
     const price = positiveNumber(deal.price);
-    const packages = positiveNumber(deal.packages);
+    const packages = positiveInteger(deal.packages);
     const quantity = positiveNumber(deal.quantity);
     const unit = unitMap.get(deal.unit);
     if (!price || !packages || !quantity || !unit) {

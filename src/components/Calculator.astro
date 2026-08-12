@@ -60,7 +60,7 @@ import { unitGroups } from '../lib/units';
   }
 </style>
 <script>
-  import { compareDeals, formatUnitPrice, packageMultiplier } from '../lib/calculator';
+  import { compareDeals, formatUnitPrice, initialPackageCount, packageMultiplier } from '../lib/calculator';
   import { unitMap } from '../lib/units';
   const root = document.querySelector('[data-calculator]');
   if (root instanceof HTMLElement) {
@@ -76,7 +76,13 @@ import { unitGroups } from '../lib/units';
     const cards = () => [...root.querySelectorAll('.deal-card')];
     function addDeal() {
       if (!(dealsEl instanceof HTMLElement) || !(template instanceof HTMLTemplateElement) || cards().length >= 5) return;
-      dealsEl.append(template.content.cloneNode(true)); relabel(); configureMobileInputs(); update();
+      const deal = template.content.cloneNode(true);
+      if (deal instanceof DocumentFragment) {
+        const packages = deal.querySelector('input[data-field="packages"]');
+        if (packages instanceof HTMLInputElement) packages.value = initialPackageCount(mobileQuery.matches);
+        if (!mobileQuery.matches) deal.querySelectorAll('input[placeholder]').forEach((input) => input.removeAttribute('placeholder'));
+      }
+      dealsEl.append(deal); relabel(); configureMobileInputs(); update();
     }
     function relabel() {
       cards().forEach((card, index) => { const label = card.querySelector('[data-deal-label]'); if (label) label.textContent = `Deal ${letters[index]}`; const remove = card.querySelector('[data-remove]'); if (remove instanceof HTMLButtonElement) { remove.hidden = cards().length <= 2; remove.setAttribute('aria-label', `Remove Deal ${letters[index]}`); } });
