@@ -6,5 +6,5 @@ export const siteConfig = {
   socialImageWidth: 1200,
   socialImageHeight: 630,
   gaMeasurementId: import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '',
-  adsensePublisherId: '',
+  adsensePublisherId: import.meta.env.PUBLIC_ADSENSE_PUBLISHER_ID ?? '',
 } as const;
