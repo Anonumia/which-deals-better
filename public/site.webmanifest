@@ -1,0 +1,11 @@
+{
+  "name": "Which Deals Better",
+  "short_name": "Which Deals Better",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
