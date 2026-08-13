@@ -5,6 +5,6 @@ export const siteConfig = {
   socialImage: '/social-card.webp',
   socialImageWidth: 1200,
   socialImageHeight: 630,
-  gaMeasurementId: '',
+  gaMeasurementId: import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '',
   adsensePublisherId: '',
 } as const;
