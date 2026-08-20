@@ -60,7 +60,7 @@ import { unitGroups } from '../lib/units';
   }
 </style>
 <script>
-  import { compareDeals, formatUnitPrice, initialPackageCount, packageMultiplier } from '../lib/calculator';
+  import { compareDeals, formatUnitPriceForUnit, initialPackageCount, packageMultiplier } from '../lib/calculator';
   import { unitMap } from '../lib/units';
   const root = document.querySelector('[data-calculator]');
   if (root instanceof HTMLElement) {
@@ -96,14 +96,15 @@ import { unitGroups } from '../lib/units';
         return values;
       });
       const result = compareDeals(inputs as any);
+      const comparisonUnit = result.displayUnit;
       if (mobileResult instanceof HTMLElement) {
-        if (result.status === 'winner') {
+        if (result.status === 'winner' && comparisonUnit) {
           const winner = result.winners[0];
-          mobileResult.textContent = `Better deal · Deal ${letters[winner.index]} · ${formatUnitPrice(winner.unitPrice)}/${unitMap.get(winner.unit)?.baseLabel}`;
+          mobileResult.textContent = `Better deal · Deal ${letters[winner.index]} · ${formatUnitPriceForUnit(winner.unitPrice, comparisonUnit)}`;
           mobileResult.hidden = false;
-        } else if (result.status === 'tie' && result.winners[0]) {
+        } else if (result.status === 'tie' && result.winners[0] && comparisonUnit) {
           const winner = result.winners[0];
-          mobileResult.textContent = `Same price · ${formatUnitPrice(winner.unitPrice)}/${unitMap.get(winner.unit)?.baseLabel}`;
+          mobileResult.textContent = `Same price · ${formatUnitPriceForUnit(winner.unitPrice, comparisonUnit)}`;
           mobileResult.hidden = false;
         } else {
           mobileResult.textContent = '';
@@ -119,15 +120,16 @@ import { unitGroups } from '../lib/units';
         if (example) example.textContent = raw.price && raw.quantity ? `$${raw.price} for ${isMultipack && raw.packages ? `${raw.packages} × ` : ''}${raw.quantity} ${unitLabel}` : '';
         card.classList.remove('is-winner'); const badge = card.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = true;
         const calculated = result.deals.find((deal) => deal.index === index); const output = card.querySelector('[data-unit-price]');
-        if (output) output.textContent = calculated ? `${formatUnitPrice(calculated.unitPrice)}/${unitMap.get(calculated.unit)?.baseLabel}` : 'Waiting for details';
+        if (output) output.textContent = calculated ? formatUnitPriceForUnit(calculated.unitPrice, calculated.unit) : 'Waiting for details';
       });
       if (!(resultsEl instanceof HTMLElement)) return;
       if (result.status === 'incomplete') { resultsEl.innerHTML = '<p class="results-empty">Enter the price and quantity for both deals to see which one wins.</p>'; return; }
       if (result.status === 'invalid') { resultsEl.innerHTML = '<p class="results-alert"><strong>Check the details.</strong> Every deal needs a price and quantity greater than zero. Multipacks also need the number of items in the pack.</p>'; return; }
       if (result.status === 'incompatible') { resultsEl.innerHTML = `<p class="results-alert"><strong>Units don't match.</strong> ${result.message}</p>`; return; }
-      const lines = result.deals.map((deal) => `<li><span>Deal ${letters[deal.index]}${deal.name ? ` · ${escapeText(String(deal.name))}` : ''}</span><strong>${formatUnitPrice(deal.unitPrice)}/${unitMap.get(deal.unit)?.baseLabel}</strong></li>`).join('');
+      if (!comparisonUnit) return;
+      const lines = result.deals.map((deal) => `<li><span>Deal ${letters[deal.index]}${deal.name ? ` · ${escapeText(String(deal.name))}` : ''}</span><strong>${formatUnitPriceForUnit(deal.unitPrice, comparisonUnit)}</strong></li>`).join('');
       if (result.status === 'tie') resultsEl.innerHTML = `<p class="eyebrow">Tied best deal</p><h3>These deals cost the same per unit</h3><ul>${lines}</ul>`;
-      else { const winner = result.winners[0]; const label = `Deal ${letters[winner.index]}`; resultsEl.innerHTML = `<p class="eyebrow">Best deal</p><h3>${label}${winner.name ? ` · ${escapeText(String(winner.name))}` : ''}</h3><ul>${lines}</ul><p class="advantage">${label} costs <strong>${formatPercent(result.advantagePercent ?? 0)} less</strong> per ${unitMap.get(winner.unit)?.longLabel} than the next-best deal.</p>`; const card = cards()[winner.index]; card?.classList.add('is-winner'); const badge = card?.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = false; }
+      else { const winner = result.winners[0]; const label = `Deal ${letters[winner.index]}`; resultsEl.innerHTML = `<p class="eyebrow">Best deal</p><h3>${label}${winner.name ? ` · ${escapeText(String(winner.name))}` : ''}</h3><ul>${lines}</ul><p class="advantage">${label} costs <strong>${formatPercent(result.advantagePercent ?? 0)} less</strong> per ${unitMap.get(comparisonUnit)?.longLabel} than the next-best deal.</p>`; const card = cards()[winner.index]; card?.classList.add('is-winner'); const badge = card?.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = false; }
     }
     const escapeText = (value: string) => value.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char] || char);
     const formatPercent = (value: number) => `${new Intl.NumberFormat('en-US', { maximumFractionDigits: value < 1 ? 1 : 0 }).format(value)}%`;

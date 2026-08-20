@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareDeals, initialPackageCount, packageMultiplier } from '../src/lib/calculator';
+import { compareDeals, formatUnitPriceForUnit, initialPackageCount, packageMultiplier, unitPriceIn } from '../src/lib/calculator';
 const deal = (price: unknown, quantity: unknown, unit = 'oz', packages: unknown = 1) => ({ price, quantity, unit, packages });
 
 describe('calculator comparison', () => {
@@ -36,4 +36,71 @@ describe('calculator comparison', () => {
   it.each([[0,1],[-1,1],['bad',1],[1,0],[1,-2]])('rejects invalid numeric input %s / %s',(price,quantity)=>expect(compareDeals([deal(price,quantity),deal(2,2)]).status).toBe('invalid'));
   it('rejects incompatible categories', () => expect(compareDeals([deal(2,10,'oz'),deal(2,10,'l')]).status).toBe('incompatible'));
   it('uses package count in total quantity', () => expect(compareDeals([deal(10,5,'item',3),deal(10,10,'item',1)]).winners[0].index).toBe(0));
+
+  it('displays lb prices per lb', () => {
+    const result = compareDeals([deal(17.97, 15.44, 'lb'), deal(12, 10, 'lb')]);
+    expect(result.displayUnit).toBe('lb');
+    expect(formatUnitPriceForUnit(result.deals[0].unitPrice, result.displayUnit!)).toBe('$1.17/lb');
+    expect(unitPriceIn(result.deals[0].unitPrice, 'lb')).toBeCloseTo(1.1639, 4);
+  });
+
+  it.each([
+    ['oz', 'oz'],
+    ['kg', 'kg'],
+    ['g', 'g'],
+    ['l', 'L'],
+    ['ml', 'mL'],
+  ] as const)('displays a selected %s price with the /%s label', (unit, label) => {
+    const result = compareDeals([deal(2.341, 1, unit), deal(3, 1, unit)]);
+    expect(result.displayUnit).toBe(unit);
+    expect(formatUnitPriceForUnit(result.deals[0].unitPrice, unit)).toBe(`$2.35/${label}`);
+  });
+
+  it('keeps lb vs oz comparison math normalized and displays results in Deal A units', () => {
+    const result = compareDeals([deal(16, 1, 'lb'), deal(0.75, 1, 'oz')]);
+    expect(result.winners[0].index).toBe(1);
+    expect(result.displayUnit).toBe('lb');
+    expect(formatUnitPriceForUnit(result.deals[0].unitPrice, result.displayUnit!)).toBe('$16.00/lb');
+    expect(formatUnitPriceForUnit(result.deals[1].unitPrice, result.displayUnit!)).toBe('$12.00/lb');
+  });
+
+  it.each([
+    ['kg', 'g', 10, 1, 0.008, 1, 1],
+    ['l', 'ml', 6, 1, 0.005, 1, 1],
+  ] as const)('keeps %s vs %s comparison math correct', (firstUnit, secondUnit, firstPrice, firstQuantity, secondPrice, secondQuantity, winner) => {
+    const result = compareDeals([deal(firstPrice, firstQuantity, firstUnit), deal(secondPrice, secondQuantity, secondUnit)]);
+    expect(result.winners[0].index).toBe(winner);
+    expect(result.displayUnit).toBe(firstUnit);
+  });
+
+  it('uses the same comparison-unit value for the main result and mobile sticky result', () => {
+    const result = compareDeals([deal(16, 1, 'lb'), deal(0.75, 1, 'oz')]);
+    const mainResultPrice = formatUnitPriceForUnit(result.winners[0].unitPrice, result.displayUnit!);
+    const mobileStickyPrice = formatUnitPriceForUnit(result.winners[0].unitPrice, result.displayUnit!);
+    expect(mobileStickyPrice).toBe(mainResultPrice);
+    expect(mobileStickyPrice).toBe('$12.00/lb');
+  });
+
+  it('always formats unit prices with exactly two decimal places', () => {
+    expect(formatUnitPriceForUnit(2, 'g')).toBe('$2.00/g');
+    expect(formatUnitPriceForUnit(2.1, 'g')).toBe('$2.10/g');
+    expect(formatUnitPriceForUnit(2.341, 'g')).toBe('$2.35/g');
+  });
+
+  it('displays a positive sub-cent unit price as one cent', () => {
+    expect(formatUnitPriceForUnit(0.000742, 'g')).toBe('$0.01/g');
+  });
+
+  it('rounds upward rather than to the nearest cent', () => {
+    expect(formatUnitPriceForUnit(1.1611 / 16, 'lb')).toBe('$1.17/lb');
+    expect(formatUnitPriceForUnit(2.341, 'g')).toBe('$2.35/g');
+  });
+
+  it('selects the winner using full precision when both prices display identically', () => {
+    const result = compareDeals([deal(1.1611, 1, 'lb'), deal(1.1622, 1, 'lb')]);
+    expect(result.status).toBe('winner');
+    expect(result.winners[0].index).toBe(0);
+    expect(formatUnitPriceForUnit(result.deals[0].unitPrice, 'lb')).toBe('$1.17/lb');
+    expect(formatUnitPriceForUnit(result.deals[1].unitPrice, 'lb')).toBe('$1.17/lb');
+  });
 });
