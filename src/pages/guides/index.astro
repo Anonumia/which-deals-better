@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const guides = [
+  ['how-to-compare-unit-prices', 'How to Compare Unit Prices', 'Start with price divided by quantity. Work through weight, volume, and count comparisons, and learn when a small price difference matters.'],
+  ['bigger-vs-smaller-package', 'Bigger Package vs. Smaller Package: Is Bigger Really Cheaper?', 'Compare small and large packages, then account for what you can actually use, store, and afford to buy today.'],
+  ['multipacks-bogo-multibuy', 'Multipacks, BOGO & Multi-Buy Deals: How to Compare Them', 'Turn bundle prices and buy-one-get-one offers into a total price and total quantity you can compare.'],
+  ['sale-price-vs-unit-price', 'Sale Price vs. Unit Price: Which Deal Actually Saves More?', 'Check whether a discount beats another package or brand, with examples of percentage savings, coupons, and checkout costs.'],
+];
+---
+<BaseLayout title="Shopping Guides for Comparing Deals | Which Deal's Better?" description="Practical guides to unit prices, package sizes, multipacks, BOGO offers, and sale prices, with worked shopping examples.">
+  <section class="content-section"><div class="shell">
+    <div class="prose"><p class="eyebrow">Everyday shopping decisions</p><h1>Shopping guides</h1>
+    <p>A lower sticker price, a larger box, and a bright sale tag can each point to a different purchase. These guides show how to put the numbers on the same basis, then consider the things a unit price cannot tell you: whether you need the quantity, have room for it, and will use it.</p>
+    <p>Start with unit prices if you are comparing different sizes for the first time. If a promotion is the confusing part, choose the guide that matches the offer. All prices in the examples are illustrative, so you can follow the arithmetic without needing a particular store or product.</p></div>
+    <div class="feature-grid guide-grid">{guides.map(([slug, title, description]) => <article class="info-card"><h2><a href={'/guides/' + slug + '/'}>{title}</a></h2><p>{description}</p></article>)}</div>
+    <div class="prose"><h2>Have the package details ready?</h2><p>Use the <a href="/">Which Deal's Better? calculator</a> to compare up to five options. Enter the price for the whole offer and the quantity it buys. Our <a href="/how-we-calculate/">calculation methodology</a> explains supported units, multipacks, ties, and the way results are displayed.</p></div>
+  </div></section>
+</BaseLayout>
+<style>
+  .guide-grid{margin-top:2rem}
+  .guide-grid h2{font-size:1.25rem;line-height:1.3;margin:0 0 .75rem}
+  @media(min-width:760px){.guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>

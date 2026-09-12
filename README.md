@@ -42,3 +42,22 @@ Sitewide configuration lives in `src/config/site.ts`. Leave `gaMeasurementId` an
 - Production domain: `https://whichdealsbetter.com`
 
 The only approved production flow is local repository → GitHub → GitHub-connected Cloudflare Pages → custom domain. Do not use ChatGPT Preview, OpenSite, or a ChatGPT-managed Worker. Deployment is intentionally not automated from this repository.
+
+## Publisher content checks
+
+After npm run build, run node scripts/check-content.mjs to check generated page
+titles, descriptions, canonical URLs, H1s, internal links, sitemap coverage, and
+the shared ad/analytics inclusion policy. The audit prints approximate guide word
+counts. Check both configured and unconfigured services when changing the layout;
+use temporary test values locally, never committed service IDs.
+
+AdSense defaults to off in BaseLayout. Only the homepage, individual guides
+(through GuideLayout), and How We Calculate opt in with allowAds. The short Guides
+index, About, Contact (including success/error states), Privacy, Terms, and 404
+remain ad-free. New utility pages inherit the ad-free default. Analytics remains
+independent of allowAds. Cloudflare-managed analytics injection is configured
+outside this source tree.
+
+Guide examples use illustrative prices. Keep methodology aligned with
+src/lib/calculator.ts, src/lib/units.ts, and the calculator component when behavior
+changes. Article pages reuse the shared design and add no article JavaScript.

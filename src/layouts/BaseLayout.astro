@@ -4,8 +4,8 @@ import Footer from '../components/Footer.astro';
 import { siteConfig } from '../config/site';
 import '../styles/global.css';
 
-interface Props { title: string; description: string; canonicalPath?: string; schema?: Record<string, unknown> | Record<string, unknown>[]; }
-const { title, description, canonicalPath = Astro.url.pathname, schema } = Astro.props;
+interface Props { title: string; description: string; canonicalPath?: string; schema?: Record<string, unknown> | Record<string, unknown>[]; allowAds?: boolean; }
+const { title, description, canonicalPath = Astro.url.pathname, schema, allowAds = false } = Astro.props;
 const canonical = new URL(canonicalPath, siteConfig.url).toString();
 const socialImage = new URL(siteConfig.socialImage, siteConfig.url).toString();
 ---
@@ -40,7 +40,7 @@ const socialImage = new URL(siteConfig.socialImage, siteConfig.url).toString();
       <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${siteConfig.gaMeasurementId}`}></script>
       <script is:inline define:vars={{ id: siteConfig.gaMeasurementId }}>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config',id);</script>
     </>}
-    {siteConfig.adsensePublisherId && <script is:inline async crossorigin="anonymous" src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteConfig.adsensePublisherId}`}></script>}
+    {allowAds && siteConfig.adsensePublisherId && <script is:inline async crossorigin="anonymous" src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteConfig.adsensePublisherId}`}></script>}
   </head>
   <body><a class="skip-link" href="#main">Skip to main content</a><Header /><main id="main"><slot /></main><Footer /></body>
 </html>
