@@ -3,10 +3,10 @@ import { unitGroups } from '../lib/units';
 ---
 <section class="calculator-panel" aria-labelledby="calculator-title" data-calculator>
   <div class="calculator-heading"><div><p class="eyebrow">Unit price calculator</p><h2 id="calculator-title">Compare your deals</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
-  <p class="helper">Enter each product's price, quantity, and unit. If it contains several items, turn on the multipack option.</p>
+  <p class="helper">Enter each product's price, amount, and unit. If it contains several items, turn on the multipack option.</p>
   <div class="deal-grid" data-deals></div>
   <div class="calculator-actions"><button class="add-button" type="button" data-add>+ Add another deal</button><span class="deal-limit">Compare up to 5 deals</span></div>
-  <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter the price and quantity for both deals to see which one wins.</p></div>
+  <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter the price and amount for both deals to see which one wins.</p></div>
   <div class="mobile-result-bar" data-mobile-result hidden aria-live="polite" aria-atomic="true"></div>
   <div class="mobile-keypad" data-mobile-keypad hidden aria-label="Numeric keypad">
     <div class="keypad-grid">
@@ -26,7 +26,7 @@ import { unitGroups } from '../lib/units';
     <label class="full-field">Product name <span>(optional)</span><input type="text" data-field="name" maxlength="80" placeholder="Paper towels" autocomplete="off" /></label>
     <label class="full-field">Price <span class="input-prefix"><span aria-hidden="true">$</span><input type="number" data-field="price" data-numeric-input min="0.01" step="0.01" inputmode="decimal" placeholder="8.99" autocomplete="off" /></span></label>
     <div class="field-row quantity-row">
-      <label><span data-size-label>Quantity</span><input type="number" data-field="quantity" data-numeric-input min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
+      <label><span data-size-label>Amount</span><input type="number" data-field="quantity" data-numeric-input min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
       <label>Unit <select data-field="unit">{unitGroups.map(({ group, units }) => <optgroup label={group}>{units.map((unit) => <option value={unit.value}>{unit.label}</option>)}</optgroup>)}</select></label>
     </div>
     <label class="multipack-toggle"><input type="checkbox" data-multipack /> <span>This is a multipack</span></label>
@@ -115,7 +115,7 @@ import { unitGroups } from '../lib/units';
       cards().forEach((card, index) => {
         const multipack = card.querySelector('[data-multipack]'); const isMultipack = multipack instanceof HTMLInputElement && multipack.checked;
         const fields = card.querySelector('[data-multipack-fields]'); if (fields instanceof HTMLElement) fields.hidden = !isMultipack;
-        const sizeLabel = card.querySelector('[data-size-label]'); if (sizeLabel) sizeLabel.textContent = isMultipack ? 'Quantity per item' : 'Quantity';
+        const sizeLabel = card.querySelector('[data-size-label]'); if (sizeLabel) sizeLabel.textContent = isMultipack ? 'Amount per item' : 'Amount';
         const raw = inputs[index] as any; const example = card.querySelector('[data-deal-example]'); const unitLabel = unitMap.get(raw.unit)?.label;
         if (example) example.textContent = raw.price && raw.quantity ? `$${raw.price} for ${isMultipack && raw.packages ? `${raw.packages} × ` : ''}${raw.quantity} ${unitLabel}` : '';
         card.classList.remove('is-winner'); const badge = card.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = true;
@@ -123,8 +123,8 @@ import { unitGroups } from '../lib/units';
         if (output) output.textContent = calculated ? formatUnitPriceForUnit(calculated.unitPrice, calculated.unit) : 'Waiting for details';
       });
       if (!(resultsEl instanceof HTMLElement)) return;
-      if (result.status === 'incomplete') { resultsEl.innerHTML = '<p class="results-empty">Enter the price and quantity for both deals to see which one wins.</p>'; return; }
-      if (result.status === 'invalid') { resultsEl.innerHTML = '<p class="results-alert"><strong>Check the details.</strong> Every deal needs a price and quantity greater than zero. Multipacks also need the number of items in the pack.</p>'; return; }
+      if (result.status === 'incomplete') { resultsEl.innerHTML = '<p class="results-empty">Enter the price and amount for both deals to see which one wins.</p>'; return; }
+      if (result.status === 'invalid') { resultsEl.innerHTML = '<p class="results-alert"><strong>Check the details.</strong> Every deal needs a price and amount greater than zero. Multipacks also need the number of items in the pack.</p>'; return; }
       if (result.status === 'incompatible') { resultsEl.innerHTML = `<p class="results-alert"><strong>Units don't match.</strong> ${result.message}</p>`; return; }
       if (!comparisonUnit) return;
       const lines = result.deals.map((deal) => `<li><span>Deal ${letters[deal.index]}${deal.name ? ` · ${escapeText(String(deal.name))}` : ''}</span><strong>${formatUnitPriceForUnit(deal.unitPrice, comparisonUnit)}</strong></li>`).join('');

@@ -8,8 +8,8 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 <h2>Describe the whole offer in the calculator</h2>
 <p class="formula">Total quantity = number of items in pack × quantity per item</p>
 <p>For a $9 case containing 12 cans of 12 fluid ounces each, the total volume is 12 × 12 = 144 fl oz. Its unit price is $9 ÷ 144 = $0.0625 per fl oz. That is the underlying arithmetic; the calculator's displayed unit price rounds upward to a cent, as explained in <a href="/how-we-calculate/">our methodology</a>.</p>
-<p>In the <a href="/">Which Deal's Better? calculator</a>, enter 9 under “Price,” enable “This is a multipack,” enter 12 under “Number of items in pack,” and enter 12 under “Quantity per item.” Choose “fl oz” for the Unit. Price always describes the entire offer you are entering, not the price of one can.</p>
-<p>You can also enter total volume directly: Price 9, Quantity 144, Unit fl oz, with the multipack option off. Both approaches describe the same purchase. Do not enter 144 as the quantity per can and multiply by 12 again.</p>
+<p>In the <a href="/">Which Deal's Better? calculator</a>, enter 9 under “Price,” enable “This is a multipack,” enter 12 under “Number of items in pack,” and enter 12 under “Amount per item.” Choose “fl oz” for the Unit. Price always describes the entire offer you are entering, not the price of one can.</p>
+<p>You can also enter total volume directly: Price 9, Amount 144, Unit fl oz, with the multipack option off. Both approaches describe the same purchase. Do not enter 144 as the amount per can and multiply by 12 again.</p>
 
 <h2>Compare “2 for $10” with “3 for $14”</h2>
 <p>If every bottle contains 500 mL, the first offer buys 1,000 mL for $10. That is $10 per liter. The second buys 1,500 mL for $14, or about $9.33 per liter before display rounding. The second offer is cheaper per volume, although it requires spending $4 more and taking another bottle home.</p>
@@ -32,11 +32,11 @@ import GuideLayout from '../../layouts/GuideLayout.astro';
 <p>Compared with paying $9 for all three, the discount is one-third of the regular total. Compare that $0.20 per ounce with other options, then decide whether you need three packages. A promotion that requires more product may have a lower unit cost without being the best fit for a small shopping trip.</p>
 
 <h2>Choose between cans, bottles, rolls, sheets, and pods</h2>
-<p>Count is useful when the counted objects are equivalent. A 30-pod bag for $9 costs $0.30 per pod. A two-bag bundle containing 20 pods per bag for $10 costs $0.25 per pod. For the bundle, enter 2 items in pack, 20 as Quantity per item, and pod as Unit.</p>
+<p>Count is useful when the counted objects are equivalent. A 30-pod bag for $9 costs $0.30 per pod. A two-bag bundle containing 20 pods per bag for $10 costs $0.25 per pod. For the bundle, enter 2 items in pack, 20 as Amount per item, and pod as Unit.</p>
 <p>For paper, a per-sheet comparison often explains more than a per-roll comparison. Six rolls with 120 sheets each give 720 sheets. Eight rolls with 80 sheets each give 640 sheets. The package with more rolls actually has fewer sheets. At $7.20 and $6.40 respectively, both cost exactly one cent per sheet.</p>
 <p>Sheet dimensions, thickness, and usefulness can still differ. Likewise, pods may require different doses for the same job. The calculator treats count labels as individual units; it cannot decide whether one roll, pod, or bottle provides the same usefulness as another.</p>
 
 <h2>Handle mixed bundles without inventing an average item</h2>
-<p>If a pack contains two 500 mL bottles and one 250 mL bottle of a comparable product, its total volume is 1,250 mL. Enter that total as Quantity with the multipack option off. This avoids pretending all three bottles contain the same amount.</p>
+<p>If a pack contains two 500 mL bottles and one 250 mL bottle of a comparable product, its total volume is 1,250 mL. Enter that total as Amount with the multipack option off. This avoids pretending all three bottles contain the same amount.</p>
 <p>A bundle containing unrelated products is harder to compare meaningfully. Adding a shampoo bottle and a sponge as “two items” produces a number, but not a useful shared unit cost. Compare equivalent bundles or consider the individual products you actually need. For more on selecting a fair measure, see <a href="/guides/how-to-compare-unit-prices/">how to compare unit prices</a>.</p>
 </GuideLayout>
