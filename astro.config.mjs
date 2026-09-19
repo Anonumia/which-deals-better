@@ -5,4 +5,5 @@ export default defineConfig({
   site: 'https://whichdealsbetter.com',
   output: 'static',
   integrations: [sitemap()],
+  redirects: { '/how-we-calculate': '/methodology' },
 });

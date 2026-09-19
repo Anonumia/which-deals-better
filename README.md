@@ -1,6 +1,17 @@
 # Which Deal's Better?
 
-A fast, mobile-first unit price calculator for comparing product quantities, multipacks, and compatible units. Calculator data stays in the browser; no account is required.
+A fast, mobile-first shopping decision toolkit. It connects a unit-price comparator, coupon and discount comparison, private household usage history, and stock-up estimates. Calculator data stays in the browser; no account is required.
+
+## Public routes
+
+- `/` — flagship Compare Deals calculator
+- `/coupon-comparator/` — sale, percentage-off, and dollar-off comparison
+- `/usage-tracker/` — browser-local usage records and weighted history
+- `/stock-up-calculator/` — savings and supply-duration estimates
+- `/methodology/` — formulas, conversion rules, assumptions, and limitations
+- `/shopping-examples/` and `/guides/` — original worked examples and practical guides
+
+The former `/how-we-calculate/` route redirects to `/methodology/`.
 
 ## Local development
 
@@ -51,12 +62,16 @@ the shared ad/analytics inclusion policy. The audit prints approximate guide wor
 counts. Check both configured and unconfigured services when changing the layout;
 use temporary test values locally, never committed service IDs.
 
-AdSense defaults to off in BaseLayout. Only the homepage, individual guides
-(through GuideLayout), and How We Calculate opt in with allowAds. The short Guides
-index, About, Contact (including success/error states), Privacy, Terms, and 404
-remain ad-free. New utility pages inherit the ad-free default. Analytics remains
-independent of allowAds. Cloudflare-managed analytics injection is configured
-outside this source tree.
+AdSense defaults to off in BaseLayout. Only the homepage, substantive individual
+guides (through GuideLayout), Methodology, and Worked Shopping Examples opt in with
+allowAds. The Guides index, About, Contact (including success/error states), Privacy,
+Terms, 404, redirects, and all three utility tools remain ad-free. New utility pages
+inherit the ad-free default. Analytics remains independent of allowAds.
+Cloudflare-managed analytics injection is configured outside this source tree.
+
+Usage Tracker records use the `whichdealsbetter.usage.v1` local-storage key. The
+optional Compare Deals handoff uses session storage so product details are not put
+in a URL. No item-level analytics events are emitted.
 
 Guide examples use illustrative prices. Keep methodology aligned with
 src/lib/calculator.ts, src/lib/units.ts, and the calculator component when behavior

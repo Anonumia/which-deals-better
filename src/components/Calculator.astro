@@ -3,7 +3,7 @@ import { unitGroups } from '../lib/units';
 ---
 <section class="calculator-panel" aria-labelledby="calculator-title" data-calculator>
   <div class="calculator-heading"><div><p class="eyebrow">Unit price calculator</p><h2 id="calculator-title">Compare your deals</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
-  <p class="helper">Enter each product's price, amount, and unit. If it contains several items, turn on the multipack option.</p>
+  <p class="helper">Enter each product's price and the amount contained in one item or package—such as 12 oz, 1.5 lb, 750 mL, or 24 count. For several identical items, turn on the multipack option.</p>
   <div class="deal-grid" data-deals></div>
   <div class="calculator-actions"><button class="add-button" type="button" data-add>+ Add another deal</button><span class="deal-limit">Compare up to 5 deals</span></div>
   <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter the price and amount for both deals to see which one wins.</p></div>
@@ -26,7 +26,7 @@ import { unitGroups } from '../lib/units';
     <label class="full-field">Product name <span>(optional)</span><input type="text" data-field="name" maxlength="80" placeholder="Paper towels" autocomplete="off" /></label>
     <label class="full-field">Price <span class="input-prefix"><span aria-hidden="true">$</span><input type="number" data-field="price" data-numeric-input min="0.01" step="0.01" inputmode="decimal" placeholder="8.99" autocomplete="off" /></span></label>
     <div class="field-row quantity-row">
-      <label><span data-size-label>Amount</span><input type="number" data-field="quantity" data-numeric-input min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
+      <label><span>Amount in Unit</span><input type="number" data-field="quantity" data-numeric-input min="0.01" step="any" inputmode="decimal" placeholder="18" autocomplete="off" /></label>
       <label>Unit <select data-field="unit">{unitGroups.map(({ group, units }) => <optgroup label={group}>{units.map((unit) => <option value={unit.value}>{unit.label}</option>)}</optgroup>)}</select></label>
     </div>
     <label class="multipack-toggle"><input type="checkbox" data-multipack /> <span>This is a multipack</span></label>
@@ -62,6 +62,7 @@ import { unitGroups } from '../lib/units';
 <script>
   import { compareDeals, formatUnitPriceForUnit, initialPackageCount, packageMultiplier } from '../lib/calculator';
   import { unitMap } from '../lib/units';
+  import { PURCHASE_HANDOFF_KEY } from '../lib/usage';
   const root = document.querySelector('[data-calculator]');
   if (root instanceof HTMLElement) {
     const dealsEl = root.querySelector('[data-deals]');
@@ -115,7 +116,6 @@ import { unitGroups } from '../lib/units';
       cards().forEach((card, index) => {
         const multipack = card.querySelector('[data-multipack]'); const isMultipack = multipack instanceof HTMLInputElement && multipack.checked;
         const fields = card.querySelector('[data-multipack-fields]'); if (fields instanceof HTMLElement) fields.hidden = !isMultipack;
-        const sizeLabel = card.querySelector('[data-size-label]'); if (sizeLabel) sizeLabel.textContent = isMultipack ? 'Amount per item' : 'Amount';
         const raw = inputs[index] as any; const example = card.querySelector('[data-deal-example]'); const unitLabel = unitMap.get(raw.unit)?.label;
         if (example) example.textContent = raw.price && raw.quantity ? `$${raw.price} for ${isMultipack && raw.packages ? `${raw.packages} × ` : ''}${raw.quantity} ${unitLabel}` : '';
         card.classList.remove('is-winner'); const badge = card.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = true;
@@ -129,7 +129,7 @@ import { unitGroups } from '../lib/units';
       if (!comparisonUnit) return;
       const lines = result.deals.map((deal) => `<li><span>Deal ${letters[deal.index]}${deal.name ? ` · ${escapeText(String(deal.name))}` : ''}</span><strong>${formatUnitPriceForUnit(deal.unitPrice, comparisonUnit)}</strong></li>`).join('');
       if (result.status === 'tie') resultsEl.innerHTML = `<p class="eyebrow">Tied best deal</p><h3>These deals cost the same per unit</h3><ul>${lines}</ul>`;
-      else { const winner = result.winners[0]; const label = `Deal ${letters[winner.index]}`; resultsEl.innerHTML = `<p class="eyebrow">Best deal</p><h3>${label}${winner.name ? ` · ${escapeText(String(winner.name))}` : ''}</h3><ul>${lines}</ul><p class="advantage">${label} costs <strong>${formatPercent(result.advantagePercent ?? 0)} less</strong> per ${unitMap.get(comparisonUnit)?.longLabel} than the next-best deal.</p>`; const card = cards()[winner.index]; card?.classList.add('is-winner'); const badge = card?.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = false; }
+      else { const winner = result.winners[0]; const label = `Deal ${letters[winner.index]}`; resultsEl.innerHTML = `<p class="eyebrow">Best deal</p><h3>${label}${winner.name ? ` · ${escapeText(String(winner.name))}` : ''}</h3><ul>${lines}</ul><p class="advantage">${label} costs <strong>${formatPercent(result.advantagePercent ?? 0)} less</strong> per ${unitMap.get(comparisonUnit)?.longLabel} than the next-best deal.</p><button class="primary-button track-button" type="button" data-track="${winner.index}">Track this purchase</button>`; const card = cards()[winner.index]; card?.classList.add('is-winner'); const badge = card?.querySelector('[data-winner]'); if (badge instanceof HTMLElement) badge.hidden = false; }
     }
     const escapeText = (value: string) => value.replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char] || char);
     const formatPercent = (value: number) => `${new Intl.NumberFormat('en-US', { maximumFractionDigits: value < 1 ? 1 : 0 }).format(value)}%`;
@@ -195,7 +195,7 @@ import { unitGroups } from '../lib/units';
     });
     keypad?.addEventListener('pointerdown', (event) => event.preventDefault());
     keypad?.addEventListener('click', (event) => { const target = event.target; if (target instanceof HTMLButtonElement && target.dataset.key) enterKey(target.dataset.key); });
-    root.addEventListener('click', (event) => { const target = event.target; if (!(target instanceof Element)) return; if (target.closest('[data-add]')) addDeal(); if (target.closest('[data-reset]')) { if (dealsEl instanceof HTMLElement) dealsEl.innerHTML = ''; addDeal(); addDeal(); } if (target.closest('[data-remove]') && cards().length > 2) { target.closest('.deal-card')?.remove(); relabel(); update(); } });
+    root.addEventListener('click', (event) => { const target = event.target; if (!(target instanceof Element)) return; if (target.closest('[data-add]')) addDeal(); if (target.closest('[data-reset]')) { if (dealsEl instanceof HTMLElement) dealsEl.innerHTML = ''; addDeal(); addDeal(); } if (target.closest('[data-remove]') && cards().length > 2) { target.closest('.deal-card')?.remove(); relabel(); update(); } const track = target.closest('[data-track]') as HTMLElement | null; if (track?.dataset.track) { const card = cards()[Number(track.dataset.track)]; if (card) { const value = (name: string) => (card.querySelector(`[data-field="${name}"]`) as HTMLInputElement | HTMLSelectElement | null)?.value ?? ''; const isMultipack = (card.querySelector('[data-multipack]') as HTMLInputElement | null)?.checked ?? false; const quantity = Number(value('quantity')); const packages = isMultipack ? Number(value('packages')) : 1; sessionStorage.setItem(PURCHASE_HANDOFF_KEY, JSON.stringify({ name:value('name'), amount:quantity * packages, unit:value('unit'), cost:Number(value('price')) })); window.location.href = '/usage-tracker/'; } } });
     mobileQuery.addEventListener('change', configureMobileInputs);
     addDeal(); addDeal(); configureMobileInputs();
   }

@@ -1,0 +1,37 @@
+<section class="calculator-panel tool-panel" data-coupon-calculator aria-labelledby="coupon-title">
+  <div class="calculator-heading"><div><p class="eyebrow">Coupon & discount comparator</p><h2 id="coupon-title">Compare two final prices</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
+  <p class="helper">Use the price you would normally pay, add an optional sale price, then apply one coupon. Dollar-off coupons apply once to the offer total.</p>
+  <div class="deal-grid">
+    {[0, 1].map((index) => <fieldset class="deal-card" data-offer>
+      <legend>Offer {index === 0 ? 'A' : 'B'}</legend>
+      <label class="full-field">Offer name <span>(optional)</span><input data-field="name" maxlength="80" placeholder="Store coupon" /></label>
+      <div class="field-row"><label>Regular price per package <span class="input-prefix"><span aria-hidden="true">$</span><input data-field="regularPrice" type="number" min="0.01" step="0.01" inputmode="decimal" /></span></label><label>Sale price per package <span>(optional)</span><span class="input-prefix"><span aria-hidden="true">$</span><input data-field="salePrice" type="number" min="0.01" step="0.01" inputmode="decimal" /></span></label></div>
+      <div class="field-row"><label>Coupon type<select data-field="couponType"><option value="none">No coupon</option><option value="percent">Percentage off</option><option value="fixed">Dollar amount off</option></select></label><label>Coupon value<input data-field="couponValue" type="number" min="0" step="0.01" inputmode="decimal" value="0" /></label></div>
+      <div class="field-row"><label>Packages purchased<input data-field="quantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Items in each package<input data-field="itemsPerPackage" type="number" min="1" step="1" inputmode="numeric" value="1" /></label></div>
+    </fieldset>)}
+  </div>
+  <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter the regular price for both offers to see which costs less after discounts.</p></div>
+</section>
+<script>
+  import { compareDiscountOffers } from '../lib/discounts';
+  const root = document.querySelector('[data-coupon-calculator]');
+  const money = (value: number) => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(value);
+  if (root instanceof HTMLElement) {
+    const resultEl = root.querySelector('[data-results]');
+    const update = () => {
+      const inputs = [...root.querySelectorAll('[data-offer]')].map((card) => Object.fromEntries([...card.querySelectorAll('[data-field]')].map((field) => [field.getAttribute('data-field'), field instanceof HTMLInputElement || field instanceof HTMLSelectElement ? field.value : ''])));
+      const empty = inputs.every((offer) => !offer.regularPrice);
+      if (!(resultEl instanceof HTMLElement)) return;
+      if (empty) { resultEl.innerHTML = '<p class="results-empty">Enter the regular price for both offers to see which costs less after discounts.</p>'; return; }
+      const result = compareDiscountOffers(inputs as any);
+      if (result.status === 'invalid') { resultEl.innerHTML = '<p class="results-alert"><strong>Check both offers.</strong> Prices must be greater than zero, quantities must be whole numbers, and percentage coupons cannot exceed 100%.</p>'; return; }
+      const labels = ['Offer A', 'Offer B'];
+      const rows = result.offers.map((offer, index) => `<li><span><strong>${labels[index]}${offer.name ? ` · ${escapeText(offer.name)}` : ''}</strong><small>${offer.savings >= 0 ? `${money(offer.savings)} saved` : `${money(Math.abs(offer.savings))} above regular`} · ${offer.totalItems} item${offer.totalItems === 1 ? '' : 's'}</small></span><span><strong>${money(offer.finalTotal)} final</strong><small>${money(offer.effectivePrice)} per item</small></span></li>`).join('');
+      const heading = result.status === 'tie' ? 'The final prices are tied' : `${labels[result.winnerIndexes[0]]} is cheaper by ${money(result.difference ?? 0)}`;
+      resultEl.innerHTML = `<p class="eyebrow">Shopping answer</p><h3>${heading}</h3><ul class="result-details">${rows}</ul>`;
+    };
+    const escapeText = (value: string) => value.replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[char] || char);
+    root.addEventListener('input', update); root.addEventListener('change', update);
+    root.querySelector('[data-reset]')?.addEventListener('click', () => { root.querySelectorAll('input').forEach((input) => { input.value = input.dataset.field === 'quantity' || input.dataset.field === 'itemsPerPackage' ? '1' : input.dataset.field === 'couponValue' ? '0' : ''; }); root.querySelectorAll('select').forEach((select) => select.value = 'none'); update(); });
+  }
+</script>

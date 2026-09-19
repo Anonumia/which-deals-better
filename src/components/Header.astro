@@ -5,7 +5,8 @@ import { siteConfig } from '../config/site';
   <div class="shell header-inner">
     <a class="brand" href="/" aria-label={`${siteConfig.name} home`}><img class="brand-mark" src="/favicon.svg" width="28" height="28" alt="" /> <span>{siteConfig.name}</span></a>
     <nav aria-label="Primary navigation">
-      <a href="/">Home</a><a href="/guides/">Guides</a><a href="/about/">About</a><a href="/contact/">Contact</a>
+      <a href="/">Compare</a><a href="/coupon-comparator/">Coupons</a><a href="/stock-up-calculator/">Stock-Up</a><a href="/usage-tracker/">Usage</a><a href="/guides/">Guides</a>
+      <details class="nav-more"><summary>More</summary><div><a href="/methodology/">Methodology</a><a href="/about/">About</a><a href="/contact/">Contact</a></div></details>
     </nav>
   </div>
 </header>
@@ -13,7 +14,8 @@ import { siteConfig } from '../config/site';
   .brand{display:inline-flex;align-items:center;gap:.5rem;line-height:1.1}
   .brand span{color:inherit}
   .brand-mark{display:block;width:1.65rem;height:1.65rem;flex:0 0 auto}
-  @media(max-width:470px){
-    .site-header nav{width:auto;justify-content:flex-start;gap:1.25rem}
+  .nav-more{position:relative}.nav-more summary{font-size:.94rem;font-weight:650;cursor:pointer;list-style:none}.nav-more summary::-webkit-details-marker{display:none}.nav-more summary::after{content:' ▾';font-size:.72em}.nav-more div{position:absolute;z-index:20;right:0;display:grid;min-width:10rem;padding:.65rem;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:var(--shadow)}.nav-more div a{padding:.35rem}
+  @media(max-width:760px){
+    .site-header nav{width:100%;gap:.85rem;overflow-x:auto;padding-bottom:.2rem}.site-header nav>a{white-space:nowrap}.nav-more div{right:auto;left:0}
   }
 </style>

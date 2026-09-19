@@ -5,6 +5,8 @@ const guides = [
   ['bigger-vs-smaller-package', 'Bigger Package vs. Smaller Package: Is Bigger Really Cheaper?', 'Compare small and large packages, then account for what you can actually use, store, and afford to buy today.'],
   ['multipacks-bogo-multibuy', 'Multipacks, BOGO & Multi-Buy Deals: How to Compare Them', 'Turn bundle prices and buy-one-get-one offers into a total price and total quantity you can compare.'],
   ['sale-price-vs-unit-price', 'Sale Price vs. Unit Price: Which Deal Actually Saves More?', 'Check whether a discount beats another package or brand, with examples of percentage savings, coupons, and checkout costs.'],
+  ['mixed-unit-comparisons', 'How to Compare Mixed Units Without Misleading Math', 'Convert ounces and pounds, grams and kilograms, and milliliters and liters—and recognize measurements that should stay separate.'],
+  ['when-lowest-unit-price-isnt-enough', 'When the Lowest Unit Price Is Not the Whole Decision', 'Put unit price beside shelf life, storage, cash outlay, promotion restrictions, and your household’s actual usage.'],
 ];
 ---
 <BaseLayout title="Shopping Guides for Comparing Deals | Which Deal's Better?" description="Practical guides to unit prices, package sizes, multipacks, BOGO offers, and sale prices, with worked shopping examples.">
@@ -13,7 +15,7 @@ const guides = [
     <p>A lower sticker price, a larger box, and a bright sale tag can each point to a different purchase. These guides show how to put the numbers on the same basis, then consider the things a unit price cannot tell you: whether you need the quantity, have room for it, and will use it.</p>
     <p>Start with unit prices if you are comparing different sizes for the first time. If a promotion is the confusing part, choose the guide that matches the offer. All prices in the examples are illustrative, so you can follow the arithmetic without needing a particular store or product.</p></div>
     <div class="feature-grid guide-grid">{guides.map(([slug, title, description]) => <article class="info-card"><h2><a href={'/guides/' + slug + '/'}>{title}</a></h2><p>{description}</p></article>)}</div>
-    <div class="prose"><h2>Have the package details ready?</h2><p>Use the <a href="/">Which Deal's Better? calculator</a> to compare up to five options. Enter the price for the whole offer and the amount it buys. Our <a href="/how-we-calculate/">calculation methodology</a> explains supported units, multipacks, ties, and the way results are displayed.</p></div>
+    <div class="prose"><h2>Have the package details ready?</h2><p>Use <a href="/">Compare Deals</a> for up to five options, the <a href="/coupon-comparator/">Coupon Comparator</a> for final-price promotions, or browse the <a href="/shopping-examples/">worked examples</a>. Our <a href="/methodology/">methodology</a> explains supported units, multipacks, ties, discounts, usage rates, and stock-up estimates.</p></div>
   </div></section>
 </BaseLayout>
 <style>

@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CouponComparator from '../components/CouponComparator.astro';
+---
+<BaseLayout title="Coupon & Discount Comparator | Which Deal's Better?" description="Compare percentage-off, dollar-off, sale-price, quantity, and multipack offers to find the lowest final cost and effective price per item.">
+  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Understand the discount</p><h1>Coupon & discount comparator</h1><p>Compare two offers using what you will actually pay—not the size of the percentage or the headline coupon value. Combine one sale price and one coupon per offer without building a confusing stacking scenario.</p></div></section>
+  <div class="shell calculator-wrap"><CouponComparator /></div>
+  <section class="content-section alt"><div class="shell prose"><h2>How to enter an offer</h2><p>Use the regular price for one package. If the product is already on sale, add the sale price. Then choose either percentage off or dollar amount off. “Packages purchased” handles a requirement such as buying two, while “Items in each package” turns the final total into an effective price per item.</p><p>A dollar-off coupon is deducted once from the whole offer. A percentage coupon is applied to the sale total. Discounts stop at zero; the tool does not model rebates, loyalty points, tax, coupon order, or store-specific stacking rules.</p><h2>Compare the same purchase</h2><p>The winning offer is the lower final checkout total. If quantities differ, also inspect the effective price per item. A lower total for fewer items and a lower per-item cost answer different questions.</p><p>For packages measured in ounces, liters, or another amount, use <a href="/">Compare Deals</a> after calculating each final price. See <a href="/methodology/">the methodology</a> for formulas and a worked percentage-versus-dollar example.</p></div></section>
+</BaseLayout>

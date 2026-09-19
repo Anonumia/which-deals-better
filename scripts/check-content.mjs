@@ -9,9 +9,12 @@ const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(entry =>
 const pages = walk(root).filter(path => path.endsWith('.html'));
 const expected = [
   '/guides/', '/guides/how-to-compare-unit-prices/', '/guides/bigger-vs-smaller-package/',
-  '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/how-we-calculate/',
+  '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/mixed-unit-comparisons/',
+  '/guides/when-lowest-unit-price-isnt-enough/', '/methodology/', '/shopping-examples/',
+  '/coupon-comparator/', '/stock-up-calculator/', '/usage-tracker/',
 ];
-const adRoutes = new Set(['/', ...expected.filter(route => route !== '/guides/')]);
+const adRoutes = new Set(['/', '/methodology/', '/shopping-examples/', ...expected.filter(route => route.startsWith('/guides/') && route !== '/guides/')]);
+const explicitlyAdFree = new Set(['/404.html', '/about/', '/contact/', '/privacy/', '/terms/', '/guides/', '/coupon-comparator/', '/stock-up-calculator/', '/usage-tracker/']);
 const home = read(join(root, 'index.html'));
 const hasAds = home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js');
 const hasAnalytics = home.includes('www.googletagmanager.com/gtag/js');
@@ -26,14 +29,18 @@ for (const path of pages) {
   const html = read(path);
   const relative = path.slice(root.length).replaceAll('\\', '/');
   const route = relative === '/index.html' ? '/' : relative.replace(/index\.html$/, '');
+  if (html.includes('http-equiv="refresh"')) { assert.ok(!html.includes('pagead2.googlesyndication.com'), 'Redirect must be ad-free: ' + route); continue; }
   const title = html.match(/<title>(.*?)<\/title>/s)?.[1];
   const description = html.match(/<meta name="description" content="([^"]+)"/)?.[1];
   assert.ok(title && !titles.has(title), 'Missing/duplicate title: ' + route);
   assert.ok(description && !descriptions.has(description), 'Missing/duplicate description: ' + route);
   titles.add(title); descriptions.add(description);
   assert.equal((html.match(/<h1(?:\s|>)/g) || []).length, 1, 'H1 count: ' + route);
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(([, id]) => id);
+  assert.equal(ids.length, new Set(ids).size, 'Duplicate element id: ' + route);
   assert.ok(html.includes('rel="canonical" href="https://whichdealsbetter.com' + (route === '/404.html' ? '/404' : route) + '"'), 'Canonical: ' + route);
   assert.equal(html.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'), hasAds && adRoutes.has(route), 'Ad policy: ' + route);
+  if (explicitlyAdFree.has(route)) assert.ok(!html.includes('pagead2.googlesyndication.com'), 'Explicitly ad-free route: ' + route);
   assert.equal(html.includes('www.googletagmanager.com/gtag/js'), hasAnalytics, 'Analytics: ' + route);
   for (const [, href] of html.matchAll(/<a\b[^>]*href="([^"]*)"/g)) {
     assert.ok(href && !href.startsWith('javascript:'), 'Invalid link: ' + route);
@@ -50,6 +57,6 @@ for (const path of pages) {
     console.log(route + ': approximately ' + text.trim().split(/\s+/).length + ' words');
   }
 }
-assert.ok(!/Disallow:\s*\/(?:guides|how-we-calculate)/i.test(read(join(root, 'robots.txt'))), 'Blocked content');
+assert.ok(!/Disallow:\s*\/(?:guides|methodology|shopping-examples)/i.test(read(join(root, 'robots.txt'))), 'Blocked content');
 console.log('PASS: ' + pages.length + ' pages; unique metadata, H1s, canonicals, internal links, sitemap, ads (' + hasAds + '), and analytics (' + hasAnalytics + ').');
 

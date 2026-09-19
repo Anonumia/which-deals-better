@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import UsageTracker from '../components/UsageTracker.astro';
+---
+<BaseLayout title="Household Usage Tracker | Which Deal's Better?" description="Privately track how long household purchases last, review daily and weekly usage averages, and use that history for stock-up estimates.">
+  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Learn from what you use</p><h1>Household usage tracker</h1><p>Record a supply when you start it, mark it finished later, and turn elapsed time into a practical usage rate. This is a small decision tool—not pantry inventory or a grocery list.</p></div></section>
+  <UsageTracker />
+  <section class="content-section alt"><div class="shell prose"><h2>How averages are calculated</h2><p>One completed period shows how many days the recorded amount lasted, plus average use per day and week. When the same item name and unit have several completed periods, the tracker combines their total amount and total elapsed days. That weighted history avoids treating a short and a long period as equally representative.</p><p>Use consistent names and units—“Paper towels” in rolls each time, for example—so records group together. A cost is optional; when recorded, the history can also estimate cost per day.</p><h2>Your local data controls</h2><p>Usage records remain in this browser’s local storage. They are not submitted to our servers, included in analytics events, or synced to another device. Clearing site data in your browser can remove them. You can delete one record or clear all tracker data here; both destructive actions ask for confirmation.</p><p>When you have a completed period, open the <a href="/stock-up-calculator/">Stock-Up Calculator</a> and explicitly choose that history as the estimate source.</p></div></section>
+</BaseLayout>

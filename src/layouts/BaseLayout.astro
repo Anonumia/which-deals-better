@@ -3,6 +3,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { siteConfig } from '../config/site';
 import '../styles/global.css';
+import '../styles/tools.css';
 
 interface Props { title: string; description: string; canonicalPath?: string; schema?: Record<string, unknown> | Record<string, unknown>[]; allowAds?: boolean; }
 const { title, description, canonicalPath = Astro.url.pathname, schema, allowAds = false } = Astro.props;

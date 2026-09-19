@@ -1,0 +1,60 @@
+---
+import { unitGroups } from '../lib/units';
+---
+<div class="shell calculator-wrap"><section class="calculator-panel tool-panel" data-usage-tracker aria-labelledby="tracker-title">
+  <div class="calculator-heading"><div><p class="eyebrow">Private browser-local tracker</p><h2 id="tracker-title">Track how long a purchase lasts</h2></div><div class="data-actions"><button class="text-button" type="button" data-export>Export data</button><button class="text-button danger-link" type="button" data-clear>Clear all data</button></div></div>
+  <p class="helper">Records are stored only in this browser on this device. No account or cloud sync is used.</p>
+  <form class="tool-form tracker-form" data-form>
+    <label class="full-field">Item name<input name="name" maxlength="80" required placeholder="Paper towels" autocomplete="off" /></label>
+    <div class="field-row"><label>Amount purchased<input name="amount" type="number" min="0.01" step="any" inputmode="decimal" required /></label><label>Unit<select name="unit">{unitGroups.map(({ group, units }) => <optgroup label={group}>{units.map((unit) => <option value={unit.value}>{unit.label}</option>)}</optgroup>)}</select></label></div>
+    <div class="field-row"><label>Purchase or start date<input name="startDate" type="date" required /></label><label>Purchase cost <span>(optional)</span><span class="input-prefix"><span aria-hidden="true">$</span><input name="cost" type="number" min="0" step="0.01" inputmode="decimal" /></span></label></div>
+    <button class="primary-button" type="submit">Start tracking</button><p class="form-status" data-status aria-live="polite" hidden></p>
+  </form>
+</section></div>
+
+<section class="content-section tracker-lists" data-tracker-lists>
+  <div class="shell tracker-grid"><section aria-labelledby="active-title"><p class="eyebrow">In progress</p><h2 id="active-title">Active items</h2><div data-active></div></section><section aria-labelledby="history-title"><p class="eyebrow">Past usage periods</p><h2 id="history-title">Completed history</h2><div data-history></div></section></div>
+</section>
+<script>
+  import { elapsedDays, parseUsageRecords, PURCHASE_HANDOFF_KEY, summarizeUsage, usageKey, USAGE_STORAGE_KEY } from '../lib/usage';
+  import { unitMap } from '../lib/units';
+  const root = document.querySelector('[data-usage-tracker]'); const lists = document.querySelector('[data-tracker-lists]');
+  const number = (value: number, digits = 2) => new Intl.NumberFormat('en-US', { maximumFractionDigits:digits }).format(value);
+  const money = (value: number) => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(value);
+  const today = () => new Date().toISOString().slice(0, 10);
+  if (root instanceof HTMLElement && lists instanceof HTMLElement) {
+    const form = root.querySelector('[data-form]') as HTMLFormElement | null; const status = root.querySelector('[data-status]');
+    const activeEl = lists.querySelector('[data-active]'); const historyEl = lists.querySelector('[data-history]');
+    let records = parseUsageRecords(localStorage.getItem(USAGE_STORAGE_KEY));
+    const save = () => localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(records));
+    const escapeText = (value: string) => value.replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[char] || char);
+    const unitLabel = (unit: string) => unitMap.get(unit)?.label ?? unit;
+    const render = () => {
+      const active = records.filter((record) => !record.completedDate).sort((a, b) => b.startDate.localeCompare(a.startDate));
+      const completed = records.filter((record) => record.completedDate).sort((a, b) => (b.completedDate ?? '').localeCompare(a.completedDate ?? ''));
+      if (activeEl) activeEl.innerHTML = active.length ? active.map((record) => `<article class="record-card"><h3>${escapeText(record.name)}</h3><p><strong>${number(record.amount)} ${unitLabel(record.unit)}</strong> started ${record.startDate}${record.cost === undefined ? '' : ` · ${money(record.cost)}`}</p><div class="record-actions"><button class="primary-button small-button" type="button" data-complete="${escapeText(record.id)}">Mark finished today</button><button class="text-button" type="button" data-delete="${escapeText(record.id)}">Delete</button></div></article>`).join('') : '<div class="empty-card"><p>No active items yet. Add a purchase above when you want to learn its real usage rate.</p></div>';
+      if (historyEl) {
+        if (!completed.length) historyEl.innerHTML = '<div class="empty-card"><p>Completed usage periods will appear here with daily and weekly averages.</p></div>';
+        else {
+          const summaries = new Map<string, string>();
+          completed.forEach((record) => { const summary = summarizeUsage(records, record.name, record.unit); if (summary) summaries.set(usageKey(record.name, record.unit), `<article class="record-card summary-card"><p class="eyebrow">Historical average · ${summary.records} period${summary.records === 1 ? '' : 's'}</p><h3>${escapeText(record.name)}</h3><p><strong>${number(summary.amountPerWeek)} ${unitLabel(record.unit)}/week</strong> · ${number(summary.daysPerUnit)} days per ${unitLabel(record.unit)}${summary.costPerDay === null ? '' : ` · ${money(summary.costPerDay)}/day`}</p><a class="inline-link" href="/stock-up-calculator/">Check a stock-up sale →</a></article>`); });
+          const periods = completed.map((record) => { const days = elapsedDays(record.startDate, record.completedDate!); const perDay = days ? record.amount / days : 0; return `<article class="record-card compact-record"><h3>${escapeText(record.name)}</h3><p>${number(record.amount)} ${unitLabel(record.unit)} lasted <strong>${days} days</strong> · ${number(perDay)} per day · ${number(perDay * 7)} per week</p><p>${record.startDate} to ${record.completedDate}${record.cost === undefined || !days ? '' : ` · ${money(record.cost / days)} per day`}</p><button class="text-button" type="button" data-delete="${escapeText(record.id)}">Delete this period</button></article>`; }).join('');
+          historyEl.innerHTML = `${[...summaries.values()].join('')}<h3 class="period-heading">Individual periods</h3>${periods}`;
+        }
+      }
+    };
+    const showStatus = (message: string, state = 'success') => { if (status instanceof HTMLElement) { status.textContent = message; status.dataset.state = state; status.hidden = false; } };
+    const addRecord = (values: { name:string; amount:string; unit:string; startDate:string; cost:string }) => {
+      const amount = Number(values.amount); const cost = values.cost === '' ? undefined : Number(values.cost);
+      if (!values.name.trim() || !Number.isFinite(amount) || amount <= 0 || !values.startDate || (cost !== undefined && (!Number.isFinite(cost) || cost < 0))) { showStatus('Check the item name, amount, and start date.', 'error'); return false; }
+      records.push({ id: crypto.randomUUID(), name:values.name.trim(), amount, unit:values.unit, startDate:values.startDate, cost, createdAt:new Date().toISOString() }); save(); render(); return true;
+    };
+    form?.addEventListener('submit', (event) => { event.preventDefault(); const values = Object.fromEntries(new FormData(form)) as any; if (addRecord(values)) { form.reset(); const date = form.elements.namedItem('startDate'); if (date instanceof HTMLInputElement) date.value = today(); showStatus('Tracking started. Mark it finished when the supply runs out.'); } });
+    lists.addEventListener('click', (event) => { const target = event.target; if (!(target instanceof HTMLElement)) return; const complete = target.closest('[data-complete]') as HTMLElement | null; const remove = target.closest('[data-delete]') as HTMLElement | null; if (complete?.dataset.complete) { const record = records.find((item) => item.id === complete.dataset.complete); if (record) { const days = elapsedDays(record.startDate, today()); if (!days) { showStatus('A usage period must last at least one day before it can be completed.', 'error'); return; } record.completedDate = today(); save(); render(); showStatus('Usage period completed. Its rate is now available to the Stock-Up Calculator.'); } } if (remove?.dataset.delete && confirm('Delete this usage record? This cannot be undone.')) { records = records.filter((item) => item.id !== remove.dataset.delete); save(); render(); } });
+    root.querySelector('[data-clear]')?.addEventListener('click', () => { if (records.length && confirm('Clear every active and completed usage record from this browser? This cannot be undone.')) { records = []; localStorage.removeItem(USAGE_STORAGE_KEY); render(); showStatus('All local usage records were cleared.'); } });
+    root.querySelector('[data-export]')?.addEventListener('click', () => { const blob = new Blob([JSON.stringify({ exportedAt:new Date().toISOString(), records }, null, 2)], { type:'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `which-deals-better-usage-${today()}.json`; link.click(); URL.revokeObjectURL(link.href); showStatus('A local JSON export was created.'); });
+    const date = form?.elements.namedItem('startDate'); if (date instanceof HTMLInputElement) date.value = today();
+    try { const handoff = JSON.parse(sessionStorage.getItem(PURCHASE_HANDOFF_KEY) || 'null'); if (handoff && form) { const name = form.elements.namedItem('name'); const amount = form.elements.namedItem('amount'); const unit = form.elements.namedItem('unit'); const cost = form.elements.namedItem('cost'); if (name instanceof HTMLInputElement) name.value = typeof handoff.name === 'string' ? handoff.name : ''; if (amount instanceof HTMLInputElement) amount.value = String(handoff.amount ?? ''); if (unit instanceof HTMLSelectElement && typeof handoff.unit === 'string') unit.value = handoff.unit; if (cost instanceof HTMLInputElement) cost.value = String(handoff.cost ?? ''); sessionStorage.removeItem(PURCHASE_HANDOFF_KEY); showStatus('Purchase details were carried over from Compare Deals. Add a start date if needed, then start tracking.'); } } catch { sessionStorage.removeItem(PURCHASE_HANDOFF_KEY); }
+    render();
+  }
+</script>
