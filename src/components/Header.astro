@@ -1,30 +1,18 @@
 ---
 import { siteConfig } from '../config/site';
-import { mobileNavigation, moreNavigation, primaryNavigation } from '../config/navigation';
+import { moreNavigation, primaryNavigation } from '../config/navigation';
 ---
 <header class="site-header" data-site-header>
   <div class="shell header-inner">
     <a class="brand" href="/" aria-label={`${siteConfig.name} home`}><img class="brand-mark" src="/favicon.svg" width="28" height="28" alt="" /> <span>{siteConfig.name}</span></a>
-
-    <nav class="desktop-nav" aria-label="Primary navigation">
+    <nav class="primary-nav" aria-label="Primary navigation">
       {primaryNavigation.map((item) => <a href={item.href}>{item.label}</a>)}
-      <div class="desktop-more" data-desktop-more>
-        <button class="more-toggle" type="button" aria-expanded="false" aria-controls="desktop-more-menu" data-more-toggle>More <span aria-hidden="true">▾</span></button>
-        <div class="more-menu" id="desktop-more-menu" data-more-menu hidden>
+      <div class="nav-more" data-nav-more>
+        <button class="more-toggle" type="button" aria-expanded="false" aria-controls="more-menu" data-more-toggle>More <span aria-hidden="true">▾</span></button>
+        <div class="more-menu" id="more-menu" data-more-menu hidden>
           {moreNavigation.map((item) => <a href={item.href}>{item.label}</a>)}
         </div>
       </div>
-    </nav>
-
-    <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-navigation" data-mobile-toggle>
-      <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span>Menu</span>
-    </button>
-  </div>
-
-  <div class="mobile-menu" id="mobile-navigation" data-mobile-menu hidden>
-    <nav class="shell mobile-nav" aria-label="Mobile navigation">
-      {mobileNavigation.map((item) => <a href={item.href}>{item.label}</a>)}
     </nav>
   </div>
 </header>
@@ -34,78 +22,50 @@ import { mobileNavigation, moreNavigation, primaryNavigation } from '../config/n
   .brand{display:inline-flex;min-width:0;align-items:center;gap:.5rem;line-height:1.1;white-space:nowrap}
   .brand span{color:inherit}
   .brand-mark{display:block;width:1.65rem;height:1.65rem;flex:0 0 auto}
-  .desktop-nav{display:flex;align-items:center;gap:clamp(.7rem,2vw,1.35rem)}
-  .desktop-more{position:relative;display:flex;align-items:center}
-  .more-toggle,.mobile-menu-toggle{min-height:44px;border:1px solid transparent;background:transparent;font-weight:650;cursor:pointer}
-  .more-toggle{padding:.5rem 0;font-size:.94rem}
+  .primary-nav{display:flex;align-items:center;gap:clamp(.75rem,2.4vw,1.5rem)}
+  .primary-nav>a,.more-toggle{display:flex;min-height:44px;align-items:center;white-space:nowrap}
+  .nav-more{position:relative;display:flex;align-items:center}
+  .more-toggle{border:1px solid transparent;background:transparent;padding:.4rem 0;font-size:.94rem;font-weight:650;cursor:pointer}
   .more-toggle span{font-size:.72em}
-  .more-menu{position:absolute;z-index:70;top:calc(100% + .2rem);right:0;display:grid;width:max-content;min-width:10rem;max-width:calc(100vw - 2rem);padding:.65rem;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:var(--shadow)}
-  .more-menu[hidden],.mobile-menu[hidden]{display:none}
-  .more-menu a{min-height:44px;padding:.55rem .65rem}
-  .mobile-menu-toggle,.mobile-menu{display:none}
+  .more-menu{position:absolute;z-index:70;top:calc(100% + .2rem);right:0;display:grid;width:max-content;min-width:12rem;max-width:calc(100vw - 20px);padding:.65rem;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:var(--shadow)}
+  .more-menu[hidden]{display:none}
+  .more-menu a{display:flex;min-height:44px;align-items:center;padding:.55rem .65rem;border-radius:7px}
 
-  @media(max-width:839px){
-    .header-inner{min-height:64px;flex-direction:row;align-items:center;justify-content:space-between;gap:.75rem;padding:.55rem 0}
-    .brand{max-width:calc(100% - 5.75rem);font-size:clamp(.88rem,4vw,1rem)}
-    .desktop-nav{display:none}
-    .mobile-menu-toggle{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:.5rem;min-width:5rem;padding:.5rem .7rem;border-color:var(--line);border-radius:10px;background:var(--card)}
-    .menu-icon{display:grid;width:1.05rem;gap:3px}.menu-icon span{display:block;height:2px;border-radius:2px;background:currentColor}
-    .mobile-menu{display:block;border-top:1px solid var(--line);background:var(--paper);box-shadow:0 8px 20px rgba(24,57,47,.08)}
-    .mobile-menu[hidden]{display:none}
-    .mobile-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem .75rem;padding:.65rem 0 .85rem}
-    .mobile-nav a{display:flex;min-width:0;min-height:48px;align-items:center;padding:.65rem .7rem;border-radius:9px;background:rgba(255,255,255,.58);white-space:normal}
-  }
-
-  @media(max-width:359px){
-    .mobile-nav{grid-template-columns:1fr}
+  @media(max-width:679px){
+    .header-inner{min-height:0;flex-direction:column;align-items:stretch;gap:0;padding:.45rem 0 .25rem}
+    .brand{align-self:flex-start;min-height:44px;font-size:clamp(.9rem,4vw,1rem)}
+    .primary-nav{width:100%;justify-content:space-between;gap:clamp(.2rem,2vw,.55rem)}
+    .primary-nav>a,.more-toggle{padding-inline:.05rem;font-size:clamp(.78rem,3.6vw,.94rem)}
+    .more-menu{min-width:12rem}
+    .more-menu a{min-height:48px;padding:.65rem .75rem;font-size:.94rem}
   }
 </style>
 
 <script>
   const header = document.querySelector('[data-site-header]');
   if (header instanceof HTMLElement) {
-    const mobileToggle = header.querySelector('[data-mobile-toggle]');
-    const mobileMenu = header.querySelector('[data-mobile-menu]');
-    const more = header.querySelector('[data-desktop-more]');
+    const more = header.querySelector('[data-nav-more]');
     const moreToggle = header.querySelector('[data-more-toggle]');
     const moreMenu = header.querySelector('[data-more-menu]');
-    const mobileQuery = window.matchMedia('(max-width: 839px)');
     const hoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
-
-    const setMobileOpen = (open: boolean) => {
-      if (!(mobileToggle instanceof HTMLButtonElement) || !(mobileMenu instanceof HTMLElement)) return;
-      mobileToggle.setAttribute('aria-expanded', String(open));
-      mobileMenu.hidden = !open;
-    };
     const setMoreOpen = (open: boolean) => {
       if (!(moreToggle instanceof HTMLButtonElement) || !(moreMenu instanceof HTMLElement)) return;
       moreToggle.setAttribute('aria-expanded', String(open));
       moreMenu.hidden = !open;
     };
-    const closeAll = () => { setMobileOpen(false); setMoreOpen(false); };
 
-    mobileToggle?.addEventListener('click', () => {
-      const open = mobileToggle.getAttribute('aria-expanded') !== 'true';
-      setMobileOpen(open); setMoreOpen(false);
-    });
-    moreToggle?.addEventListener('click', () => {
-      const open = moreToggle.getAttribute('aria-expanded') !== 'true';
-      setMoreOpen(open); setMobileOpen(false);
-    });
+    moreToggle?.addEventListener('click', () => setMoreOpen(moreToggle.getAttribute('aria-expanded') !== 'true'));
     more?.addEventListener('pointerenter', () => { if (hoverQuery.matches) setMoreOpen(true); });
     more?.addEventListener('pointerleave', () => { if (hoverQuery.matches && !more.matches(':focus-within')) setMoreOpen(false); });
     more?.addEventListener('focusout', (event) => { const target = event instanceof FocusEvent ? event.relatedTarget : null; const next = target instanceof Node ? target : null; if (!more.contains(next)) setMoreOpen(false); });
-    mobileMenu?.addEventListener('click', (event) => { if (event.target instanceof Element && event.target.closest('a')) setMobileOpen(false); });
-    document.addEventListener('click', (event) => { if (event.target instanceof Node && !header.contains(event.target)) closeAll(); });
+    moreMenu?.addEventListener('click', (event) => { if (event.target instanceof Element && event.target.closest('a')) setMoreOpen(false); });
+    document.addEventListener('click', (event) => { if (event.target instanceof Node && !header.contains(event.target)) setMoreOpen(false); });
     document.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
-      const mobileWasOpen = mobileToggle instanceof HTMLButtonElement && mobileToggle.getAttribute('aria-expanded') === 'true';
-      const moreWasOpen = moreToggle instanceof HTMLButtonElement && moreToggle.getAttribute('aria-expanded') === 'true';
-      closeAll();
-      if (mobileWasOpen && mobileToggle instanceof HTMLButtonElement) mobileToggle.focus();
-      else if (moreWasOpen && moreToggle instanceof HTMLButtonElement) moreToggle.focus();
+      const wasOpen = moreToggle instanceof HTMLButtonElement && moreToggle.getAttribute('aria-expanded') === 'true';
+      setMoreOpen(false);
+      if (wasOpen && moreToggle instanceof HTMLButtonElement) moreToggle.focus();
     });
-    mobileQuery.addEventListener('change', closeAll);
     header.dataset.navigationReady = 'true';
   }
 </script>
