@@ -7,7 +7,7 @@
       <label class="full-field">Offer name <span>(optional)</span><input data-a="name" maxlength="80" placeholder="Store BOGO" autocomplete="off" /></label>
       <div class="field-row"><label>Price per item<span class="input-prefix"><span aria-hidden="true">$</span><input data-a="pricePerItem" type="number" min="0.01" step="0.01" inputmode="decimal" autocomplete="off" /></span></label><label>Quantity needed<input data-a="quantity" type="number" min="1" step="1" inputmode="numeric" value="2" /></label></div>
       <div class="field-row quantity-row"><label>Buy<input data-a="buyQuantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Get<input data-a="getQuantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label></div>
-      <div class="field-row"><label>Get item discount<select data-a="discountType" data-discount-type aria-controls="get-discount-percent"><option value="free">Free · 100% off</option><option value="percent">Percentage off</option></select></label><label id="get-discount-percent" data-percent-wrap hidden>Percentage discount<input data-a="discountPercent" type="number" min="0" max="100" step="1" inputmode="decimal" value="50" /></label></div>
+      <div class="field-row"><label>Get item discount<select data-a="discountType" data-discount-type aria-controls="get-discount-percent"><option value="free">Free · 100% off</option><option value="percent">Percentage off</option></select></label><label id="get-discount-percent" data-percent-wrap hidden>Percentage discount<input data-a="discountPercent" type="number" min="0" max="100" step="any" inputmode="decimal" autocomplete="off" /></label></div>
     </fieldset>
     <fieldset class="deal-card" data-offer-b>
       <legend>Offer B · Compare price</legend>
@@ -56,7 +56,11 @@
       const percentage = discountType instanceof HTMLSelectElement && discountType.value === 'percent';
       if (percentWrap instanceof HTMLElement) percentWrap.hidden = !percentage;
       const input = percentWrap?.querySelector('input');
-      if (input instanceof HTMLInputElement) input.disabled = !percentage;
+      if (input instanceof HTMLInputElement) {
+        input.disabled = !percentage;
+        input.required = percentage;
+        if (!percentage) input.value = '';
+      }
       discountType?.setAttribute('aria-expanded', String(percentage));
     };
     const offerCard = (label: string, offer: { checkoutTotal:number; quantity:number; effectivePrice:number }, savings?: number, note = '') => `<article class="offer-result"><h4>${label}</h4><dl><dt>Checkout total</dt><dd>${money(offer.checkoutTotal)}</dd><dt>Number of items</dt><dd>${number(offer.quantity)}</dd><dt>Effective price per item</dt><dd>${money(offer.effectivePrice)}</dd>${savings === undefined ? '' : `<dt>Savings from promotion</dt><dd>${money(savings)}</dd>`}</dl>${note ? `<p class="group-note">${note}</p>` : ''}</article>`;
@@ -110,7 +114,7 @@
     root.querySelector('[data-reset]')?.addEventListener('click', () => {
       root.querySelectorAll('input').forEach((input) => {
         const key = input.dataset.a || input.dataset.b;
-        input.value = key === 'buyQuantity' || key === 'getQuantity' ? '1' : key === 'quantity' ? '2' : key === 'discountPercent' ? '50' : '';
+        input.value = key === 'buyQuantity' || key === 'getQuantity' ? '1' : key === 'quantity' ? '2' : '';
       });
       if (discountType instanceof HTMLSelectElement) discountType.value = 'free';
       update();

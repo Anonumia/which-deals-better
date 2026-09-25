@@ -6,7 +6,7 @@ const promotion = (overrides: Partial<Parameters<typeof calculateBogoOffer>[0]> 
   buyQuantity: 1,
   getQuantity: 1,
   discountType: 'free' as const,
-  discountPercent: 50,
+  discountPercent: '',
   quantity: 2,
   ...overrides,
 });
@@ -16,6 +16,12 @@ describe('Buy X Get Y calculations', () => {
     const result = calculateBogoOffer(promotion())!;
     expect(result.checkoutTotal).toBe(10);
     expect(result.effectivePrice).toBe(5);
+    expect(result.promotionSavings).toBe(10);
+  });
+
+  it('always treats Free as 100% off without a percentage value', () => {
+    const result = calculateBogoOffer(promotion({ discountPercent: '' }))!;
+    expect(result.checkoutTotal).toBe(10);
     expect(result.promotionSavings).toBe(10);
   });
 
@@ -31,6 +37,18 @@ describe('Buy X Get Y calculations', () => {
     expect(result.checkoutTotal).toBe(15);
     expect(result.effectivePrice).toBe(7.5);
     expect(result.promotionSavings).toBe(5);
+  });
+
+  it('accepts 0% and charges every item at full price', () => {
+    const result = calculateBogoOffer(promotion({ discountType: 'percent', discountPercent: 0 }))!;
+    expect(result.checkoutTotal).toBe(20);
+    expect(result.promotionSavings).toBe(0);
+  });
+
+  it('accepts 100% and makes the Get item free', () => {
+    const result = calculateBogoOffer(promotion({ discountType: 'percent', discountPercent: 100 }))!;
+    expect(result.checkoutTotal).toBe(10);
+    expect(result.promotionSavings).toBe(10);
   });
 
   it('applies multiple complete promotional groups', () => {
@@ -90,6 +108,8 @@ describe('Buy X Get Y calculations', () => {
     promotion({ buyQuantity: 0 }),
     promotion({ getQuantity: 1.5 }),
     promotion({ quantity: -2 }),
+    promotion({ discountType: 'percent', discountPercent: '' }),
+    promotion({ discountType: 'percent', discountPercent: -1 }),
     promotion({ discountType: 'percent', discountPercent: 101 }),
   ])('rejects blank, zero, fractional-quantity, negative, and excessive values', (input) => {
     expect(calculateBogoOffer(input)).toBeNull();
