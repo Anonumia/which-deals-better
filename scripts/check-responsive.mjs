@@ -81,25 +81,30 @@ try {
   }
 
   await navigate('/tip-calculator/',375);
-  let tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');const buttons=[...root.querySelectorAll('[data-tip]')];const initial={bill:bill.value,pressed:buttons.map(button=>button.getAttribute('aria-pressed')),text:root.querySelector('[data-results]').textContent.trim()};bill.value='42';bill.dispatchEvent(new Event('input',{bubbles:true}));const waiting=root.querySelector('[data-results]').textContent.trim();buttons.find(button=>button.dataset.tip==='20').click();const result=root.querySelector('[data-results]');const selected={headline:result.querySelector('h3')?.textContent,summary:result.querySelector('.tip-summary')?.textContent,metrics:[...result.querySelectorAll('.metric-grid li')].map(item=>item.innerText.replace(/\\s+/g,' ').trim()),pressed:buttons.map(button=>button.getAttribute('aria-pressed')),heights:buttons.map(button=>button.getBoundingClientRect().height),overflow:document.documentElement.scrollWidth>innerWidth};return{initial,waiting,selected}})()`);
-  assert.deepEqual(tipState.initial.pressed,['false','false','false'],'No tip percentage is preselected');
+  let tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');const initial={bill:bill.value,buttons:root.querySelectorAll('[data-tip]').length,text:root.querySelector('[data-results]').textContent.trim()};bill.value='79.99';bill.dispatchEvent(new Event('input',{bubbles:true}));const result=root.querySelector('[data-results]');const cards=[...result.querySelectorAll('.tip-result-card')];const rects=cards.map(card=>{const rect=card.getBoundingClientRect();return{top:rect.top,width:rect.width}});return{initial,summary:result.querySelector('.tip-bill-summary')?.textContent.replace(/\\s+/g,' ').trim(),cards:cards.map(card=>card.innerText.replace(/\\s+/g,' ').trim()),rects,overflow:document.documentElement.scrollWidth>innerWidth}})()`);
   assert.equal(tipState.initial.bill,'');
+  assert.equal(tipState.initial.buttons,0,'Tip percentage buttons are removed');
   assert.match(tipState.initial.text,/Enter a bill amount/);
-  assert.match(tipState.waiting,/Choose 15%, 18%, or 20%/);
-  assert.equal(tipState.selected.headline,'Tip: $8.40');
-  assert.equal(tipState.selected.summary,'Bill $42.00 · 20% selected');
-  assert.deepEqual(tipState.selected.metrics,['Tip $8.40','Total including tip $50.40']);
-  assert.deepEqual(tipState.selected.pressed,['false','false','true']);
-  assert.ok(tipState.selected.heights.every(height=>height>=58),'Tip choices have mobile-friendly tap targets');
-  assert.equal(tipState.selected.overflow,false,'Tip calculator fits a 375px viewport');
+  assert.equal(tipState.summary,'Bill: $79.99');
+  assert.deepEqual(tipState.cards,['15% Tip $12.00 Total $91.99','18% Tip $14.40 Total $94.39','20% Tip $16.00 Total $95.99']);
+  assert.ok(tipState.rects[0].top<tipState.rects[1].top&&tipState.rects[1].top<tipState.rects[2].top,'Tip cards stack vertically on mobile');
+  assert.ok(tipState.rects.every(card=>Math.abs(card.width-tipState.rects[0].width)<=.5),'Mobile tip cards have equal widths');
+  assert.equal(tipState.overflow,false,'Tip calculator fits a 375px viewport');
   { const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,'tip-375.png');writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`); }
 
-  tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');bill.value='0';bill.dispatchEvent(new Event('input',{bubbles:true}));const zero=root.querySelector('[data-results]').textContent.trim();bill.value='';bill.dispatchEvent(new Event('input',{bubbles:true}));const blank=root.querySelector('[data-results]').textContent.trim();root.querySelector('[data-reset]').click();return{zero,blank,reset:{bill:bill.value,pressed:[...root.querySelectorAll('[data-tip]')].map(button=>button.getAttribute('aria-pressed')),text:root.querySelector('[data-results]').textContent.trim()}}})()`);
+  tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');bill.value='42';bill.dispatchEvent(new Event('input',{bubbles:true}));const updated=[...root.querySelectorAll('.tip-result-card')].map(card=>card.innerText.replace(/\\s+/g,' ').trim());bill.value='0';bill.dispatchEvent(new Event('input',{bubbles:true}));const zero=root.querySelector('[data-results]').textContent.trim();bill.value='';bill.dispatchEvent(new Event('input',{bubbles:true}));const blank=root.querySelector('[data-results]').textContent.trim();bill.value='25';bill.dispatchEvent(new Event('input',{bubbles:true}));root.querySelector('[data-reset]').click();return{updated,zero,blank,reset:{bill:bill.value,text:root.querySelector('[data-results]').textContent.trim()}}})()`);
+  assert.deepEqual(tipState.updated,['15% Tip $6.30 Total $48.30','18% Tip $7.56 Total $49.56','20% Tip $8.40 Total $50.40']);
   assert.match(tipState.zero,/Check the bill amount/);
   assert.doesNotMatch(tipState.zero,/NaN|Infinity/);
-  assert.match(tipState.blank,/Enter the bill amount/);
+  assert.match(tipState.blank,/Enter a bill amount/);
   assert.doesNotMatch(tipState.blank,/NaN|Infinity/);
-  assert.deepEqual(tipState.reset,{bill:'',pressed:['false','false','false'],text:'Enter a bill amount and choose 15%, 18%, or 20%.'});
+  assert.deepEqual(tipState.reset,{bill:'',text:'Enter a bill amount to see all three tip options.'});
+
+  await navigate('/tip-calculator/',768);
+  tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');bill.value='79.99';bill.dispatchEvent(new Event('input',{bubbles:true}));const rects=[...root.querySelectorAll('.tip-result-card')].map(card=>{const rect=card.getBoundingClientRect();return{top:rect.top,width:rect.width}});return{rects,overflow:document.documentElement.scrollWidth>innerWidth}})()`);
+  assert.ok(tipState.rects.every(card=>Math.abs(card.top-tipState.rects[0].top)<=.5),`Tip cards form one row on wider screens; ${JSON.stringify(tipState.rects)}`);
+  assert.ok(tipState.rects.every(card=>Math.abs(card.width-tipState.rects[0].width)<=.5),'Desktop tip cards have equal widths');
+  assert.equal(tipState.overflow,false,'Tip cards do not overflow at 768px');
 
   await navigate('/bogo-calculator/',375);
   let bogoState=await evaluate(`(()=>{const root=document.querySelector('[data-bogo-calculator]');const set=(selector,value)=>{const field=root.querySelector(selector);field.value=value;field.dispatchEvent(new Event('input',{bubbles:true}))};set('[data-a="pricePerItem"]','8');set('[data-a="buyQuantity"]','2');set('[data-a="getQuantity"]','1');set('[data-a="quantity"]','5');set('[data-b="pricePerItem"]','7');set('[data-b="quantity"]','5');const result=root.querySelector('[data-results]');return{headline:result.querySelector('h3')?.textContent,summary:result.querySelector('.comparison-summary')?.textContent,cards:[...result.querySelectorAll('.offer-result')].map(card=>card.innerText.replace(/\\s+/g,' ').trim()),overflow:document.documentElement.scrollWidth>innerWidth}})()`);

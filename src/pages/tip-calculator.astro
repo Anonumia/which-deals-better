@@ -8,6 +8,6 @@ const url = new URL('/tip-calculator/', siteConfig.url).toString();
 const schema = { '@context':'https://schema.org', '@type':'WebApplication', name:'Tip Calculator', url, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}, description };
 ---
 <BaseLayout {title} {description} {schema}>
-  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Quick total</p><h1>Calculate a tip quickly</h1><p>Enter your bill and choose a tip percentage.</p></div></section>
+  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Quick total</p><h1>Calculate a tip quickly</h1><p>Enter your bill to compare 15%, 18%, and 20% tip totals.</p></div></section>
   <div class="shell calculator-wrap"><TipCalculator /></div>
 </BaseLayout>

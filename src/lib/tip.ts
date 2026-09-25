@@ -18,3 +18,8 @@ export function calculateTip(billValue: unknown, percentageValue: unknown): TipR
   if (!Number.isFinite(tip) || !Number.isFinite(total)) return null;
   return { bill, percentage: percentage as TipPercentage, tip, total };
 }
+
+export function calculateTipOptions(billValue: unknown): TipResult[] | null {
+  const results = TIP_PERCENTAGES.map((percentage) => calculateTip(billValue, percentage));
+  return results.every((result): result is TipResult => result !== null) ? results : null;
+}

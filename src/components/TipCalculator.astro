@@ -1,64 +1,46 @@
 <section class="calculator-panel tool-panel tip-panel" data-tip-calculator aria-labelledby="tip-title">
-  <div class="calculator-heading"><div><p class="eyebrow">Tip calculator</p><h2 id="tip-title">Choose a tip</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
-  <p class="helper">Enter the bill amount, then tap one percentage.</p>
+  <div class="calculator-heading"><div><p class="eyebrow">Tip calculator</p><h2 id="tip-title">Tip options</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
+  <p class="helper">Enter your bill to see 15%, 18%, and 20% tip totals.</p>
   <label class="full-field tip-bill">Bill amount<span class="input-prefix"><span aria-hidden="true">$</span><input data-bill type="number" min="0.01" step="0.01" inputmode="decimal" autocomplete="off" /></span></label>
-  <fieldset class="tip-options">
-    <legend>Tip percentage</legend>
-    <div class="tip-buttons">
-      <button type="button" data-tip="15" aria-pressed="false">15%</button>
-      <button type="button" data-tip="18" aria-pressed="false">18%</button>
-      <button type="button" data-tip="20" aria-pressed="false">20%</button>
-    </div>
-  </fieldset>
-  <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter a bill amount and choose 15%, 18%, or 20%.</p></div>
+  <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter a bill amount to see all three tip options.</p></div>
 </section>
 
 <style>
   .tip-panel{max-width:680px;margin-inline:auto}
   .tip-bill{max-width:22rem}
-  .tip-options{min-width:0;margin:0 0 1.25rem;padding:0;border:0}
-  .tip-options legend{margin-bottom:.45rem;font-size:.86rem;font-weight:750}
-  .tip-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}
-  .tip-buttons button{min-height:58px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);font-size:1.12rem;font-weight:850;cursor:pointer}
-  .tip-buttons button[aria-pressed="true"]{background:var(--ink);color:#fff}
-  .tip-buttons button:hover{background:var(--mint)}
-  .tip-buttons button[aria-pressed="true"]:hover{background:var(--ink)}
-  .tip-summary{margin:.2rem 0 1rem;color:var(--ink-soft)}
-  @media(max-width:470px){
-    .tip-buttons{gap:.45rem}
-    .tip-buttons button{min-height:62px}
+  :global(.tip-bill-summary){margin:.1rem 0 .8rem;color:var(--ink-soft)}
+  :global(.tip-result-grid){display:grid;gap:.7rem}
+  :global(.tip-result-card){padding:.85rem;border:1px solid rgba(24,57,47,.14);border-radius:12px;background:rgba(255,255,255,.55)}
+  :global(.tip-result-card h3){margin:0 0 .45rem;font-size:1.35rem}
+  :global(.tip-result-card dl){display:grid;grid-template-columns:1fr auto;gap:.3rem .75rem;margin:0}
+  :global(.tip-result-card dt){color:var(--ink-soft)}
+  :global(.tip-result-card dd){margin:0;font-weight:850;text-align:right}
+  @media(min-width:600px){
+    :global(.tip-result-grid){grid-template-columns:repeat(3,minmax(0,1fr))}
+    :global(.tip-result-card dl){grid-template-columns:1fr}
+    :global(.tip-result-card dd){text-align:left;font-size:1.05rem}
   }
 </style>
 
 <script>
-  import { calculateTip } from '../lib/tip';
+  import { calculateTipOptions } from '../lib/tip';
 
   const root = document.querySelector('[data-tip-calculator]');
   const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   if (root instanceof HTMLElement) {
     const bill = root.querySelector('[data-bill]');
     const resultEl = root.querySelector('[data-results]');
-    const buttons = [...root.querySelectorAll('[data-tip]')].filter((button): button is HTMLButtonElement => button instanceof HTMLButtonElement);
-    let selectedTip: number | null = null;
     const update = () => {
       if (!(bill instanceof HTMLInputElement) || !(resultEl instanceof HTMLElement)) return;
-      if (!bill.value && selectedTip === null) { resultEl.innerHTML = '<p class="results-empty">Enter a bill amount and choose 15%, 18%, or 20%.</p>'; return; }
-      if (!bill.value) { resultEl.innerHTML = '<p class="results-alert"><strong>Enter the bill amount.</strong> Use a value greater than zero.</p>'; return; }
-      if (selectedTip === null) { resultEl.innerHTML = '<p class="results-empty">Choose 15%, 18%, or 20% to calculate the tip.</p>'; return; }
-      const result = calculateTip(bill.value, selectedTip);
-      if (!result) { resultEl.innerHTML = '<p class="results-alert"><strong>Check the bill amount.</strong> Use a value greater than zero.</p>'; return; }
-      resultEl.innerHTML = `<p class="eyebrow">Tip result</p><h3>Tip: ${money(result.tip)}</h3><p class="tip-summary">Bill ${money(result.bill)} · ${result.percentage}% selected</p><ul class="metric-grid"><li><span>Tip</span><strong>${money(result.tip)}</strong></li><li><span>Total including tip</span><strong>${money(result.total)}</strong></li></ul>`;
+      if (!bill.value) { resultEl.innerHTML = '<p class="results-empty">Enter a bill amount to see all three tip options.</p>'; return; }
+      const results = calculateTipOptions(bill.value);
+      if (!results) { resultEl.innerHTML = '<p class="results-alert"><strong>Check the bill amount.</strong> Use a value greater than zero.</p>'; return; }
+      const cards = results.map((result) => `<article class="tip-result-card"><h3>${result.percentage}%</h3><dl><dt>Tip</dt><dd>${money(result.tip)}</dd><dt>Total</dt><dd>${money(result.total)}</dd></dl></article>`).join('');
+      resultEl.innerHTML = `<p class="eyebrow">Tip options</p><p class="tip-bill-summary">Bill: <strong>${money(results[0].bill)}</strong></p><div class="tip-result-grid">${cards}</div>`;
     };
-    buttons.forEach((button) => button.addEventListener('click', () => {
-      selectedTip = Number(button.dataset.tip);
-      buttons.forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
-      update();
-    }));
     bill?.addEventListener('input', update);
     root.querySelector('[data-reset]')?.addEventListener('click', () => {
       if (bill instanceof HTMLInputElement) bill.value = '';
-      selectedTip = null;
-      buttons.forEach((button) => button.setAttribute('aria-pressed', 'false'));
       update();
     });
   }
