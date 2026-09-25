@@ -6,7 +6,7 @@
       <legend>Offer {index === 0 ? 'A' : 'B'}</legend>
       <label class="full-field">Offer name <span>(optional)</span><input data-field="name" maxlength="80" placeholder="Store coupon" /></label>
       <div class="field-row"><label>Regular price per package <span class="input-prefix"><span aria-hidden="true">$</span><input data-field="regularPrice" type="number" min="0.01" step="0.01" inputmode="decimal" /></span></label><label>Sale price per package <span>(optional)</span><span class="input-prefix"><span aria-hidden="true">$</span><input data-field="salePrice" type="number" min="0.01" step="0.01" inputmode="decimal" /></span></label></div>
-      <div class="field-row"><label>Coupon type<select data-field="couponType"><option value="none">No coupon</option><option value="percent">Percentage off</option><option value="fixed">Dollar amount off</option></select></label><label>Coupon value<input data-field="couponValue" type="number" min="0" step="0.01" inputmode="decimal" value="0" /></label></div>
+      <div class="field-row"><label>Coupon type<select data-field="couponType"><option value="none">No coupon</option><option value="percent">Percentage off</option><option value="fixed">Dollar amount off</option></select></label><label>Coupon value<span class="input-prefix no-prefix"><span data-currency-prefix aria-hidden="true" hidden>$</span><input data-field="couponValue" type="number" min="0" step="0.01" inputmode="decimal" value="0" /></span></label></div>
       <div class="field-row"><label>Packages purchased<input data-field="quantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Items in each package<input data-field="itemsPerPackage" type="number" min="1" step="1" inputmode="numeric" value="1" /></label></div>
     </fieldset>)}
   </div>
@@ -19,6 +19,14 @@
   if (root instanceof HTMLElement) {
     const resultEl = root.querySelector('[data-results]');
     const update = () => {
+      root.querySelectorAll('[data-offer]').forEach((card) => {
+        const type = card.querySelector('[data-field="couponType"]');
+        const prefix = card.querySelector('[data-currency-prefix]');
+        const wrapper = prefix?.closest('.input-prefix');
+        const usesDollars = type instanceof HTMLSelectElement && type.value === 'fixed';
+        if (prefix instanceof HTMLElement) prefix.hidden = !usesDollars;
+        wrapper?.classList.toggle('no-prefix', !usesDollars);
+      });
       const inputs = [...root.querySelectorAll('[data-offer]')].map((card) => Object.fromEntries([...card.querySelectorAll('[data-field]')].map((field) => [field.getAttribute('data-field'), field instanceof HTMLInputElement || field instanceof HTMLSelectElement ? field.value : ''])));
       const empty = inputs.every((offer) => !offer.regularPrice);
       if (!(resultEl instanceof HTMLElement)) return;

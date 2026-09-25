@@ -59,6 +59,27 @@ try {
 
   for(const route of routes) for(const width of siteWideWidths){await navigate(route,width);assertNoOverflow(await layout(),`${route} ${width}px`)}
 
+  for(const width of [320,768,1024]){
+    await navigate('/coupon-comparator/',width);
+    await evaluate(`(()=>{const input=document.querySelector('[data-field="regularPrice"]');input.focus();return true})()`);
+    await client.send('Input.insertText',{text:'14.99'});
+    const currencyState=await evaluate(`(()=>{const root=document.querySelector('[data-coupon-calculator]');const input=root.querySelector('[data-field="regularPrice"]');const typed=input.value;input.stepUp();const steppedUp=input.value;input.stepDown();const steppedDown=input.value;const type=root.querySelector('[data-field="couponType"]');type.value='fixed';type.dispatchEvent(new Event('change',{bubbles:true}));const visible=[...root.querySelectorAll('.input-prefix')].filter(wrapper=>{const prefix=wrapper.querySelector(':scope > span');return prefix&&!prefix.hidden}).map(wrapper=>{const field=wrapper.querySelector('input');const prefix=wrapper.querySelector(':scope > span');const fieldRect=field.getBoundingClientRect();const prefixRect=prefix.getBoundingClientRect();const wrapperRect=wrapper.getBoundingClientRect();const fieldStyle=getComputedStyle(field);return{widthDifference:Math.abs(wrapperRect.width-fieldRect.width),centerDifference:Math.abs((prefixRect.top+prefixRect.height/2)-(fieldRect.top+fieldRect.height/2)),prefixInset:prefixRect.left-fieldRect.left,textInset:parseFloat(fieldStyle.paddingLeft),gap:fieldRect.left+parseFloat(fieldStyle.paddingLeft)-prefixRect.right,rightPadding:parseFloat(fieldStyle.paddingRight)}});const couponPrefix=root.querySelector('[data-currency-prefix]');const fixedVisible=!couponPrefix.hidden;type.value='percent';type.dispatchEvent(new Event('change',{bubbles:true}));return{typed,steppedUp,steppedDown,visible,fixedVisible,percentHidden:couponPrefix.hidden,overflow:document.documentElement.scrollWidth>innerWidth}})()`);
+    assert.equal(currencyState.typed,'14.99',`${width}px: keyboard entry works`);
+    assert.equal(currencyState.steppedUp,'15',`${width}px: native spinner increments currency`);
+    assert.equal(currencyState.steppedDown,'14.99',`${width}px: native spinner decrements currency`);
+    assert.equal(currencyState.visible.length,5,`${width}px: regular, sale, and selected dollar-coupon prefixes are visible`);
+    assert.ok(currencyState.visible.every(item=>item.widthDifference<=.5),`${width}px: prefix wrappers match input widths`);
+    assert.ok(currencyState.visible.every(item=>item.centerDifference<=.5),`${width}px: dollar prefixes are vertically centered; ${JSON.stringify(currencyState.visible)}`);
+    assert.ok(currencyState.visible.every(item=>Math.abs(item.prefixInset-12)<=.5),`${width}px: dollar prefixes use a consistent inset`);
+    assert.ok(currencyState.visible.every(item=>Math.abs(item.textInset-26.4)<=.5),`${width}px: currency values share a consistent text start`);
+    assert.ok(currencyState.visible.every(item=>item.gap>=1&&item.gap<=6),`${width}px: prefix-to-value spacing is compact`);
+    assert.ok(currencyState.visible.every(item=>item.rightPadding>=40),`${width}px: currency text reserves room for spinner controls`);
+    assert.equal(currencyState.fixedVisible,true,`${width}px: dollar coupon shows a currency prefix`);
+    assert.equal(currencyState.percentHidden,true,`${width}px: percentage coupon hides the currency prefix`);
+    assert.equal(currencyState.overflow,false,`${width}px: currency inputs do not create overflow`);
+    const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,`coupon-${width}.png`);writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`);
+  }
+
   await navigate('/stock-up-calculator/',375);
   let stockUpState=await evaluate(`(()=>{const usage=document.querySelector('[data-field="amountPerDay"]');const initial=usage.value;usage.stepUp();const stepped=usage.value;const fields={salePrice:'9.99',normalPrice:'14.99',amountPerPackage:'16',packageCount:'5',amountPerDay:'0.5'};for(const [name,value] of Object.entries(fields)){const input=document.querySelector('[data-field="'+name+'"]');input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}))}const result=document.querySelector('[data-results]');return{initial,stepped,headline:result.querySelector('h3')?.textContent,summary:result.querySelector('h3+p')?.textContent,metrics:[...result.querySelectorAll('.metric-grid li')].map(item=>item.textContent.trim()),overflow:document.documentElement.scrollWidth>innerWidth}})()`);
   assert.equal(stockUpState.initial,'','Daily usage starts blank');
@@ -84,7 +105,7 @@ try {
   assert.match(stockUpState.source,/weighted average from 1 completed tracker period/);
 
   for(const [width,name] of [[320,'mobile-320'],[768,'tablet-768'],[1024,'desktop-1024']]){await navigate('/',width);await evaluate(`document.querySelector('[data-more-toggle]').click()`);const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,`${name}.png`);writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`)}
-  console.log(`PASS: four-item navigation at ${exactWidths.join(', ')}px; ${routes.length} routes at ${siteWideWidths.join(', ')}px; More toggle, outside click, link selection, Escape, ARIA state, viewport bounds, and stock-up interactions verified.`);
+  console.log(`PASS: four-item navigation at ${exactWidths.join(', ')}px; ${routes.length} routes at ${siteWideWidths.join(', ')}px; More toggle, outside click, link selection, Escape, ARIA state, viewport bounds, currency input alignment, and stock-up interactions verified.`);
 } finally {
   client?.close(); processHandle.kill(); try{rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100})}catch{}
 }

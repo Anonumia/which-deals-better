@@ -1,0 +1,33 @@
+.input-prefix {
+  position: relative;
+  display: grid;
+  width: 100%;
+}
+
+.input-prefix > span {
+  position: relative;
+  z-index: 1;
+  grid-area: 1 / 1;
+  align-self: center;
+  justify-self: start;
+  left: auto;
+  top: auto;
+  margin-left: 0.75rem;
+  transform: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.input-prefix input {
+  display: block;
+  grid-area: 1 / 1;
+  padding-left: 1.65rem;
+  padding-right: 2.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.input-prefix.no-prefix input {
+  padding-left: 0.75rem;
+}
