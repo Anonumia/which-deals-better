@@ -9,18 +9,17 @@ import { unitGroups } from '../lib/units';
     <div class="field-row"><label>Sale price per package<span class="input-prefix"><span aria-hidden="true">$</span><input data-field="salePrice" type="number" min="0.01" step="0.01" inputmode="decimal" /></span></label><label>Normal price per package<span class="input-prefix"><span aria-hidden="true">$</span><input data-field="normalPrice" type="number" min="0.01" step="0.01" inputmode="decimal" /></span></label></div>
     <div class="field-row"><label>Amount in Unit per package<input data-field="amountPerPackage" type="number" min="0.01" step="any" inputmode="decimal" aria-describedby="amount-help" /></label><label>Unit<select data-field="unit">{unitGroups.map(({ group, units }) => <optgroup label={group}>{units.map((unit) => <option value={unit.value}>{unit.label}</option>)}</optgroup>)}</select></label></div>
     <p class="field-help" id="amount-help">Examples: 12 rolls, 24 count, or 1.5 lb in each package.</p>
-    <div class="field-row"><label>Packages to buy<input data-field="packageCount" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Expected use per day<input data-field="amountPerDay" type="number" min="0.001" step="any" inputmode="decimal" aria-describedby="usage-source" /></label></div>
+    <div class="field-row"><label>Packages to buy<input data-field="packageCount" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Expected use per day<input data-field="amountPerDay" type="number" step="1" inputmode="decimal" aria-describedby="usage-source" /></label></div>
     <div class="history-picker" data-history-wrap hidden><label>Use tracked history<select data-history><option value="">Choose an item history</option></select></label></div>
     <p id="usage-source" class="field-help" data-source>No completed tracker history found. Enter your own daily usage estimate.</p>
   </form>
   <div class="results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter prices, package amount, quantity, and a usage rate to estimate the stock-up value.</p></div>
 </section>
 <script>
-  import { calculateStockUp } from '../lib/stockup';
+  import { calculateStockUp, presentStockUp } from '../lib/stockup';
   import { parseUsageRecords, summarizeUsage, usageKey, USAGE_STORAGE_KEY } from '../lib/usage';
   import { unitMap } from '../lib/units';
   const root = document.querySelector('[data-stockup]');
-  const money = (value: number) => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(value);
   const number = (value: number, digits = 1) => new Intl.NumberFormat('en-US', { maximumFractionDigits:digits }).format(value);
   if (root instanceof HTMLElement) {
     const resultEl = root.querySelector('[data-results]'); const historySelect = root.querySelector('[data-history]'); const source = root.querySelector('[data-source]');
@@ -39,8 +38,9 @@ import { unitGroups } from '../lib/units';
       const result = calculateStockUp(values as any);
       if (!result) { resultEl.innerHTML = '<p class="results-alert"><strong>Check the details.</strong> Use positive prices and amounts, plus a whole number of packages.</p>'; return; }
       const unit = unitMap.get(String(values.unit))?.label ?? String(values.unit);
-      const priceContext = result.savings >= 0 ? `You save <strong>${money(result.savings)}</strong> (${number(result.savingsPercent)}%) versus today’s normal price.` : `This price costs <strong>${money(Math.abs(result.savings))} more</strong> than the normal price for this quantity.`;
-      resultEl.innerHTML = `<p class="eyebrow">Stock-up estimate</p><h3>${number(result.totalAmount, 2)} ${unit} may last about ${number(result.supplyDays, 0)} days</h3><p>${priceContext}</p><ul class="metric-grid"><li><span>Sale total</span><strong>${money(result.saleTotal)}</strong></li><li><span>Estimated cost per day</span><strong>${money(result.costPerDay)}</strong></li><li><span>Each extra package adds</span><strong>about ${number(result.extraPackageDays, 0)} days</strong></li><li><span>Saving per extra package</span><strong>${money(result.extraPackageSavings)}</strong></li></ul><p class="result-note">Use this alongside storage space, shelf life, cash available today, and how interchangeable the product is for your household.</p>`;
+      const presentation = presentStockUp(result, Number(values.packageCount), unit);
+      const metrics = presentation.metrics.map((metric) => `<li><span>${metric.label}</span><strong>${metric.value}</strong></li>`).join('');
+      resultEl.innerHTML = `<p class="eyebrow">Stock-up estimate</p><h3>${presentation.headline}</h3><p>${presentation.summary}</p><ul class="metric-grid">${metrics}</ul><p class="result-note">Use this alongside storage space, shelf life, cash available today, and how interchangeable the product is for your household.</p>`;
     };
     historySelect?.addEventListener('change', () => { if (!(historySelect instanceof HTMLSelectElement)) return; const option = historySelect.selectedOptions[0]; if (!option?.dataset.rate) return; const rate = field('amountPerDay'); const name = field('name'); const unit = field('unit'); if (rate) rate.value = option.dataset.rate; if (name) name.value = option.dataset.name ?? ''; if (unit) unit.value = option.dataset.unit ?? 'item'; if (source) source.textContent = `Using the weighted average from ${option.dataset.records} completed tracker period${option.dataset.records === '1' ? '' : 's'}. You can override the daily rate.`; update(); });
     root.addEventListener('input', update); root.addEventListener('change', update);
