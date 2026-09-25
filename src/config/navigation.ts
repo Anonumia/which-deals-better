@@ -5,6 +5,7 @@ export const primaryNavigation = [
 ] as const;
 
 export const moreNavigation = [
+  { href: '/tip-calculator/', label: 'Tip Calculator' },
   { href: '/usage-tracker/', label: 'Usage' },
   { href: '/guides/', label: 'Guides' },
   { href: '/shopping-examples/', label: 'Shopping Examples' },

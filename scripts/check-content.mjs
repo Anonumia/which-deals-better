@@ -11,10 +11,10 @@ const expected = [
   '/guides/', '/guides/how-to-compare-unit-prices/', '/guides/bigger-vs-smaller-package/',
   '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/mixed-unit-comparisons/',
   '/guides/when-lowest-unit-price-isnt-enough/', '/methodology/', '/shopping-examples/',
-  '/bogo-calculator/', '/coupon-comparator/', '/usage-tracker/',
+  '/bogo-calculator/', '/coupon-comparator/', '/tip-calculator/', '/usage-tracker/',
 ];
 const adRoutes = new Set(['/', '/methodology/', '/shopping-examples/', ...expected.filter(route => route.startsWith('/guides/') && route !== '/guides/')]);
-const explicitlyAdFree = new Set(['/404.html', '/about/', '/contact/', '/privacy/', '/terms/', '/guides/', '/bogo-calculator/', '/coupon-comparator/', '/usage-tracker/']);
+const explicitlyAdFree = new Set(['/404.html', '/about/', '/contact/', '/privacy/', '/terms/', '/guides/', '/bogo-calculator/', '/coupon-comparator/', '/tip-calculator/', '/usage-tracker/']);
 const home = read(join(root, 'index.html'));
 const hasAds = home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js');
 const hasAnalytics = home.includes('www.googletagmanager.com/gtag/js');

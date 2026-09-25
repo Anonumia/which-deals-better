@@ -13,9 +13,9 @@ const browser = browserCandidates.find(existsSync);
 assert.ok(browser, 'Chrome or Edge was not found. Set CHROME_PATH to a Chromium browser.');
 
 const topLevelLinks = ['Compare', 'BOGO', 'Coupons', 'More'];
-const moreLinks = ['Usage', 'Guides', 'Shopping Examples', 'Methodology', 'About', 'Contact'];
+const moreLinks = ['Tip Calculator', 'Usage', 'Guides', 'Shopping Examples', 'Methodology', 'About', 'Contact'];
 const exactWidths = [320, 360, 375, 390, 412, 430, 679, 680, 768, 1024, 1440];
-const routes = ['/', '/404', '/about/', '/bogo-calculator/', '/contact/', '/coupon-comparator/', '/guides/', '/guides/bigger-vs-smaller-package/', '/guides/how-to-compare-unit-prices/', '/guides/mixed-unit-comparisons/', '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/when-lowest-unit-price-isnt-enough/', '/how-we-calculate/', '/methodology/', '/privacy/', '/shopping-examples/', '/terms/', '/usage-tracker/'];
+const routes = ['/', '/404', '/about/', '/bogo-calculator/', '/contact/', '/coupon-comparator/', '/guides/', '/guides/bigger-vs-smaller-package/', '/guides/how-to-compare-unit-prices/', '/guides/mixed-unit-comparisons/', '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/when-lowest-unit-price-isnt-enough/', '/how-we-calculate/', '/methodology/', '/privacy/', '/shopping-examples/', '/terms/', '/tip-calculator/', '/usage-tracker/'];
 const siteWideWidths = [320, 430, 768, 1024, 1440];
 const port = 9300 + Math.floor(Math.random() * 500);
 const profile = mkdtempSync(join(tmpdir(), 'wdb-responsive-'));
@@ -80,6 +80,27 @@ try {
     const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,`coupon-${width}.png`);writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`);
   }
 
+  await navigate('/tip-calculator/',375);
+  let tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');const buttons=[...root.querySelectorAll('[data-tip]')];const initial={bill:bill.value,pressed:buttons.map(button=>button.getAttribute('aria-pressed')),text:root.querySelector('[data-results]').textContent.trim()};bill.value='42';bill.dispatchEvent(new Event('input',{bubbles:true}));const waiting=root.querySelector('[data-results]').textContent.trim();buttons.find(button=>button.dataset.tip==='20').click();const result=root.querySelector('[data-results]');const selected={headline:result.querySelector('h3')?.textContent,summary:result.querySelector('.tip-summary')?.textContent,metrics:[...result.querySelectorAll('.metric-grid li')].map(item=>item.innerText.replace(/\\s+/g,' ').trim()),pressed:buttons.map(button=>button.getAttribute('aria-pressed')),heights:buttons.map(button=>button.getBoundingClientRect().height),overflow:document.documentElement.scrollWidth>innerWidth};return{initial,waiting,selected}})()`);
+  assert.deepEqual(tipState.initial.pressed,['false','false','false'],'No tip percentage is preselected');
+  assert.equal(tipState.initial.bill,'');
+  assert.match(tipState.initial.text,/Enter a bill amount/);
+  assert.match(tipState.waiting,/Choose 15%, 18%, or 20%/);
+  assert.equal(tipState.selected.headline,'Tip: $8.40');
+  assert.equal(tipState.selected.summary,'Bill $42.00 · 20% selected');
+  assert.deepEqual(tipState.selected.metrics,['Tip $8.40','Total including tip $50.40']);
+  assert.deepEqual(tipState.selected.pressed,['false','false','true']);
+  assert.ok(tipState.selected.heights.every(height=>height>=58),'Tip choices have mobile-friendly tap targets');
+  assert.equal(tipState.selected.overflow,false,'Tip calculator fits a 375px viewport');
+  { const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,'tip-375.png');writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`); }
+
+  tipState=await evaluate(`(()=>{const root=document.querySelector('[data-tip-calculator]');const bill=root.querySelector('[data-bill]');bill.value='0';bill.dispatchEvent(new Event('input',{bubbles:true}));const zero=root.querySelector('[data-results]').textContent.trim();bill.value='';bill.dispatchEvent(new Event('input',{bubbles:true}));const blank=root.querySelector('[data-results]').textContent.trim();root.querySelector('[data-reset]').click();return{zero,blank,reset:{bill:bill.value,pressed:[...root.querySelectorAll('[data-tip]')].map(button=>button.getAttribute('aria-pressed')),text:root.querySelector('[data-results]').textContent.trim()}}})()`);
+  assert.match(tipState.zero,/Check the bill amount/);
+  assert.doesNotMatch(tipState.zero,/NaN|Infinity/);
+  assert.match(tipState.blank,/Enter the bill amount/);
+  assert.doesNotMatch(tipState.blank,/NaN|Infinity/);
+  assert.deepEqual(tipState.reset,{bill:'',pressed:['false','false','false'],text:'Enter a bill amount and choose 15%, 18%, or 20%.'});
+
   await navigate('/bogo-calculator/',375);
   let bogoState=await evaluate(`(()=>{const root=document.querySelector('[data-bogo-calculator]');const set=(selector,value)=>{const field=root.querySelector(selector);field.value=value;field.dispatchEvent(new Event('input',{bubbles:true}))};set('[data-a="pricePerItem"]','8');set('[data-a="buyQuantity"]','2');set('[data-a="getQuantity"]','1');set('[data-a="quantity"]','5');set('[data-b="pricePerItem"]','7');set('[data-b="quantity"]','5');const result=root.querySelector('[data-results]');return{headline:result.querySelector('h3')?.textContent,summary:result.querySelector('.comparison-summary')?.textContent,cards:[...result.querySelectorAll('.offer-result')].map(card=>card.innerText.replace(/\\s+/g,' ').trim()),overflow:document.documentElement.scrollWidth>innerWidth}})()`);
   assert.equal(bogoState.headline,'Offer A costs $3.00 less');
@@ -102,7 +123,7 @@ try {
   assert.doesNotMatch(bogoState.invalid,/NaN|Infinity/);
 
   for(const [width,name] of [[320,'mobile-320'],[768,'tablet-768'],[1024,'desktop-1024']]){await navigate('/',width);await evaluate(`document.querySelector('[data-more-toggle]').click()`);const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,`${name}.png`);writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`)}
-  console.log(`PASS: four-item navigation at ${exactWidths.join(', ')}px; ${routes.length} routes at ${siteWideWidths.join(', ')}px; More toggle, outside click, link selection, Escape, ARIA state, viewport bounds, currency input alignment, and BOGO interactions verified.`);
+  console.log(`PASS: four-item navigation at ${exactWidths.join(', ')}px; ${routes.length} routes at ${siteWideWidths.join(', ')}px; More toggle, outside click, link selection, Escape, ARIA state, viewport bounds, currency input alignment, Tip interactions, and BOGO interactions verified.`);
 } finally {
   client?.close(); processHandle.kill(); try{rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100})}catch{}
 }

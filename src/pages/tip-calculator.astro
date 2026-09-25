@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TipCalculator from '../components/TipCalculator.astro';
+import { siteConfig } from '../config/site';
+const title = 'Tip Calculator | WhichDealsBetter';
+const description = 'Calculate a 15%, 18%, or 20% tip and see the total including tip.';
+const url = new URL('/tip-calculator/', siteConfig.url).toString();
+const schema = { '@context':'https://schema.org', '@type':'WebApplication', name:'Tip Calculator', url, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}, description };
+---
+<BaseLayout {title} {description} {schema}>
+  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Quick total</p><h1>Calculate a tip quickly</h1><p>Enter your bill and choose a tip percentage.</p></div></section>
+  <div class="shell calculator-wrap"><TipCalculator /></div>
+</BaseLayout>

@@ -6,7 +6,7 @@ const header = readFileSync(new URL('../src/components/Header.astro', import.met
 
 describe('responsive navigation', () => {
   it('renders exactly Compare, BOGO, Coupons, and More at the top level', () => expect(primaryNavigation.map((item) => item.label)).toEqual(['Compare', 'BOGO', 'Coupons']));
-  it('places every remaining destination under More', () => expect(moreNavigation.map((item) => item.label)).toEqual(['Usage', 'Guides', 'Shopping Examples', 'Methodology', 'About', 'Contact']));
+  it('places every remaining destination under More', () => expect(moreNavigation.map((item) => item.label)).toEqual(['Tip Calculator', 'Usage', 'Guides', 'Shopping Examples', 'Methodology', 'About', 'Contact']));
   it('does not use a hamburger or separate mobile navigation', () => {
     expect(header).not.toContain('mobile-menu-toggle');
     expect(header).not.toContain('mobile-navigation');
