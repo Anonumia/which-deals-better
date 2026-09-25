@@ -1,0 +1,120 @@
+<section class="calculator-panel tool-panel" data-bogo-calculator aria-labelledby="bogo-title">
+  <div class="calculator-heading"><div><p class="eyebrow">Buy X Get Y calculator</p><h2 id="bogo-title">Compare the promotion with another price</h2></div><button class="text-button" type="button" data-reset>Reset</button></div>
+  <p class="helper">Enter how many identical items you need. Complete promotion groups receive the discount; items outside a complete group stay at full price.</p>
+  <div class="deal-grid">
+    <fieldset class="deal-card" data-offer-a>
+      <legend>Offer A · Buy X Get Y</legend>
+      <label class="full-field">Offer name <span>(optional)</span><input data-a="name" maxlength="80" placeholder="Store BOGO" autocomplete="off" /></label>
+      <div class="field-row"><label>Price per item<span class="input-prefix"><span aria-hidden="true">$</span><input data-a="pricePerItem" type="number" min="0.01" step="0.01" inputmode="decimal" autocomplete="off" /></span></label><label>Quantity needed<input data-a="quantity" type="number" min="1" step="1" inputmode="numeric" value="2" /></label></div>
+      <div class="field-row quantity-row"><label>Buy<input data-a="buyQuantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Get<input data-a="getQuantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label></div>
+      <div class="field-row"><label>Get item discount<select data-a="discountType" data-discount-type aria-controls="get-discount-percent"><option value="free">Free · 100% off</option><option value="percent">Percentage off</option></select></label><label id="get-discount-percent" data-percent-wrap hidden>Percentage discount<input data-a="discountPercent" type="number" min="0" max="100" step="1" inputmode="decimal" value="50" /></label></div>
+    </fieldset>
+    <fieldset class="deal-card" data-offer-b>
+      <legend>Offer B · Compare price</legend>
+      <label class="full-field">Offer name <span>(optional)</span><input data-b="name" maxlength="80" placeholder="Another store or sale" autocomplete="off" /></label>
+      <div class="field-row"><label>Price per item<span class="input-prefix"><span aria-hidden="true">$</span><input data-b="pricePerItem" type="number" min="0.01" step="0.01" inputmode="decimal" autocomplete="off" /></span></label><label>Quantity needed<input data-b="quantity" type="number" min="1" step="1" inputmode="numeric" value="2" /></label></div>
+      <p class="field-help comparison-help">Use the shelf or sale price for one item. Offer B does not apply another promotion.</p>
+    </fieldset>
+  </div>
+  <div class="results bogo-results" data-results aria-live="polite" aria-atomic="true"><p class="results-empty">Enter a price per item for both offers to compare the promotion.</p></div>
+</section>
+
+<style>
+  .comparison-help{margin:.15rem 0 0}
+  .comparison-summary{font-weight:800}
+  .comparison-detail{margin:1rem 0;padding:.8rem;border:1px solid rgba(24,57,47,.18);border-radius:10px;background:rgba(255,255,255,.5)}
+  .comparison-detail p{margin:.15rem 0}
+  .offer-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:1rem}
+  .offer-result{min-width:0;padding:.9rem;border:1px solid rgba(24,57,47,.14);border-radius:12px;background:rgba(255,255,255,.5)}
+  .offer-result h4{margin:0 0 .5rem;font-size:1.05rem}
+  .offer-result dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.4rem .75rem;margin:0}
+  .offer-result dt{color:var(--ink-soft)}
+  .offer-result dd{margin:0;font-weight:800;text-align:right}
+  .group-note{margin:.7rem 0 0;color:var(--ink-soft);font-size:.85rem}
+  @media(max-width:600px){
+    .offer-results{grid-template-columns:1fr}
+  }
+</style>
+
+<script>
+  import { compareBogoOffers } from '../lib/bogo';
+
+  const root = document.querySelector('[data-bogo-calculator]');
+  const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  const number = (value: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+  const escapeText = (value: string) => value.replace(/[&<>'"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[char] || char);
+
+  if (root instanceof HTMLElement) {
+    const resultEl = root.querySelector('[data-results]');
+    const discountType = root.querySelector('[data-discount-type]');
+    const percentWrap = root.querySelector('[data-percent-wrap]');
+    const value = (selector: string) => {
+      const element = root.querySelector(selector);
+      return element instanceof HTMLInputElement || element instanceof HTMLSelectElement ? element.value : '';
+    };
+    const syncDiscountField = () => {
+      const percentage = discountType instanceof HTMLSelectElement && discountType.value === 'percent';
+      if (percentWrap instanceof HTMLElement) percentWrap.hidden = !percentage;
+      const input = percentWrap?.querySelector('input');
+      if (input instanceof HTMLInputElement) input.disabled = !percentage;
+      discountType?.setAttribute('aria-expanded', String(percentage));
+    };
+    const offerCard = (label: string, offer: { checkoutTotal:number; quantity:number; effectivePrice:number }, savings?: number, note = '') => `<article class="offer-result"><h4>${label}</h4><dl><dt>Checkout total</dt><dd>${money(offer.checkoutTotal)}</dd><dt>Number of items</dt><dd>${number(offer.quantity)}</dd><dt>Effective price per item</dt><dd>${money(offer.effectivePrice)}</dd>${savings === undefined ? '' : `<dt>Savings from promotion</dt><dd>${money(savings)}</dd>`}</dl>${note ? `<p class="group-note">${note}</p>` : ''}</article>`;
+    const update = () => {
+      syncDiscountField();
+      if (!(resultEl instanceof HTMLElement)) return;
+      const priceA = value('[data-a="pricePerItem"]');
+      const priceB = value('[data-b="pricePerItem"]');
+      if (!priceA && !priceB) { resultEl.innerHTML = '<p class="results-empty">Enter a price per item for both offers to compare the promotion.</p>'; return; }
+      const result = compareBogoOffers({
+        pricePerItem: priceA,
+        buyQuantity: value('[data-a="buyQuantity"]'),
+        getQuantity: value('[data-a="getQuantity"]'),
+        discountType: value('[data-a="discountType"]') as 'free' | 'percent',
+        discountPercent: value('[data-a="discountPercent"]'),
+        quantity: value('[data-a="quantity"]'),
+      }, {
+        pricePerItem: priceB,
+        quantity: value('[data-b="quantity"]'),
+      });
+      if (!result) { resultEl.innerHTML = '<p class="results-alert"><strong>Check the details.</strong> Enter positive prices and whole-number quantities. Percentage discounts must be from 0% to 100%.</p>'; return; }
+
+      const labelA = escapeText(value('[data-a="name"]').trim() || 'Offer A');
+      const labelB = escapeText(value('[data-b="name"]').trim() || 'Offer B');
+      const label = (winner: 'a' | 'b') => winner === 'a' ? labelA : labelB;
+      let headline: string;
+      let summary: string;
+      if (result.sameQuantity) {
+        if (result.checkoutWinner === 'tie') {
+          headline = 'Both offers cost the same';
+          summary = 'Both offers have the same checkout total and effective price per item.';
+        } else {
+          headline = `${label(result.checkoutWinner)} costs ${money(result.checkoutDifference)} less`;
+          summary = `You save ${money(result.checkoutDifference)} with ${label(result.checkoutWinner)}.`;
+        }
+      } else {
+        headline = result.effectiveWinner === 'tie' ? 'Both offers cost the same per item' : `${label(result.effectiveWinner)} has the lower price per item`;
+        summary = 'The quantities differ, so checkout totals are not a like-for-like savings comparison.';
+      }
+
+      const checkoutLine = result.checkoutWinner === 'tie' ? 'Both offers have the same checkout total.' : `${label(result.checkoutWinner)} has the lower checkout total by ${money(result.checkoutDifference)}.`;
+      const effectiveLine = result.effectiveWinner === 'tie' ? 'Both offers have the same effective price per item.' : `${label(result.effectiveWinner)} costs ${money(result.effectiveDifference)} less per item.`;
+      const groupLabel = result.offerA.completeGroups === 1 ? 'complete promotion group' : 'complete promotion groups';
+      const remainder = result.offerA.remainingItems ? ` The remaining ${number(result.offerA.remainingItems)} item${result.offerA.remainingItems === 1 ? '' : 's'} cost full price.` : '';
+      const note = `${number(result.offerA.completeGroups)} ${groupLabel} applied.${remainder}`;
+      resultEl.innerHTML = `<p class="eyebrow">Shopping answer</p><h3>${headline}</h3><p class="comparison-summary">${summary}</p><div class="comparison-detail"><p>${checkoutLine}</p><p>${effectiveLine}</p></div><div class="offer-results">${offerCard(labelA, result.offerA, result.offerA.promotionSavings, note)}${offerCard(labelB, result.offerB)}</div>`;
+    };
+
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    root.querySelector('[data-reset]')?.addEventListener('click', () => {
+      root.querySelectorAll('input').forEach((input) => {
+        const key = input.dataset.a || input.dataset.b;
+        input.value = key === 'buyQuantity' || key === 'getQuantity' ? '1' : key === 'quantity' ? '2' : key === 'discountPercent' ? '50' : '';
+      });
+      if (discountType instanceof HTMLSelectElement) discountType.value = 'free';
+      update();
+    });
+    syncDiscountField();
+  }
+</script>

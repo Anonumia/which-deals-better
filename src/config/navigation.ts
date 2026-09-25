@@ -1,6 +1,6 @@
 export const primaryNavigation = [
   { href: '/', label: 'Compare' },
-  { href: '/stock-up-calculator/', label: 'Stock-Up' },
+  { href: '/bogo-calculator/', label: 'BOGO' },
   { href: '/coupon-comparator/', label: 'Coupons' },
 ] as const;
 

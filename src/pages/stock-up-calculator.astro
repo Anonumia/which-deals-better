@@ -1,9 +1,0 @@
----
-import BaseLayout from '../layouts/BaseLayout.astro';
-import StockUpCalculator from '../components/StockUpCalculator.astro';
----
-<BaseLayout title="Stock-Up Sale Calculator | Which Deal's Better?" description="Compare a stock-up sale’s total cost and savings with its estimated supply duration using your own or tracked household usage rate.">
-  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Buy extra with context</p><h1>Stock-up sale calculator</h1><p>A sale price answers what the item costs today. A usage rate adds the missing question: how long will several packages actually last in your household?</p></div></section>
-  <div class="shell calculator-wrap"><StockUpCalculator /></div>
-  <section class="content-section alt"><div class="shell prose"><h2>What the estimate means</h2><p>The calculator multiplies the package amount by the number of packages, then divides by your expected daily use. It compares what you will pay for the full sale quantity with what the same number of packages would cost at the normal price, so the total savings and estimated supply are visible together.</p><p>If you have completed periods in the <a href="/usage-tracker/">Household Usage Tracker</a>, choose one to use its weighted historical rate. The selected source is shown and the daily rate remains editable. The tool never silently applies stored information.</p><h2>What it cannot know</h2><p>This is not a forecast of future prices. It does not know shelf life, storage space, future demand, product changes, or the value of keeping cash available. Use the estimate as one input, especially when the projected supply lasts a long time.</p><p>Read <a href="/guides/when-lowest-unit-price-isnt-enough/">when lowest unit price is not enough</a> for the non-price side of a stock-up decision.</p></div></section>
-</BaseLayout>

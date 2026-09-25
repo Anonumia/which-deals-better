@@ -1,13 +1,13 @@
 # Which Deal's Better?
 
-A fast, mobile-first shopping decision toolkit. It connects a unit-price comparator, coupon and discount comparison, private household usage history, and stock-up estimates. Calculator data stays in the browser; no account is required.
+A fast, mobile-first shopping decision toolkit. It connects a unit-price comparator, coupon and discount comparison, Buy X Get Y promotion math, and private household usage history. Calculator data stays in the browser; no account is required.
 
 ## Public routes
 
 - `/` — flagship Compare Deals calculator
 - `/coupon-comparator/` — sale, percentage-off, and dollar-off comparison
 - `/usage-tracker/` — browser-local usage records and weighted history
-- `/stock-up-calculator/` — savings and supply-duration estimates
+- `/bogo-calculator/` — Buy X Get Y and BOGO deal comparisons
 - `/methodology/` — formulas, conversion rules, assumptions, and limitations
 - `/shopping-examples/` and `/guides/` — original worked examples and practical guides
 

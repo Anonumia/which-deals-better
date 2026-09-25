@@ -11,16 +11,19 @@ const expected = [
   '/guides/', '/guides/how-to-compare-unit-prices/', '/guides/bigger-vs-smaller-package/',
   '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/mixed-unit-comparisons/',
   '/guides/when-lowest-unit-price-isnt-enough/', '/methodology/', '/shopping-examples/',
-  '/coupon-comparator/', '/stock-up-calculator/', '/usage-tracker/',
+  '/bogo-calculator/', '/coupon-comparator/', '/usage-tracker/',
 ];
 const adRoutes = new Set(['/', '/methodology/', '/shopping-examples/', ...expected.filter(route => route.startsWith('/guides/') && route !== '/guides/')]);
-const explicitlyAdFree = new Set(['/404.html', '/about/', '/contact/', '/privacy/', '/terms/', '/guides/', '/coupon-comparator/', '/stock-up-calculator/', '/usage-tracker/']);
+const explicitlyAdFree = new Set(['/404.html', '/about/', '/contact/', '/privacy/', '/terms/', '/guides/', '/bogo-calculator/', '/coupon-comparator/', '/usage-tracker/']);
 const home = read(join(root, 'index.html'));
 const hasAds = home.includes('pagead2.googlesyndication.com/pagead/js/adsbygoogle.js');
 const hasAnalytics = home.includes('www.googletagmanager.com/gtag/js');
 const titles = new Set();
 const descriptions = new Set();
 const sitemap = read(join(root, 'sitemap-0.xml'));
+const redirects = read(join(root, '_redirects'));
+assert.match(redirects, /^\/stock-up-calculator\/? \/bogo-calculator\/ 301$/m, 'Missing permanent Stock-Up redirect');
+assert.ok(!sitemap.includes('/stock-up-calculator/'), 'Legacy Stock-Up URL must not remain in the sitemap');
 for (const route of expected) {
   assert.ok(existsSync(join(root, route, 'index.html')), 'Missing page: ' + route);
   assert.ok(sitemap.includes('https://whichdealsbetter.com' + route + '</loc>'), 'Missing sitemap URL: ' + route);

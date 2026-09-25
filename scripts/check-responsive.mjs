@@ -12,10 +12,10 @@ const browserCandidates = process.env.CHROME_PATH ? [process.env.CHROME_PATH] : 
 const browser = browserCandidates.find(existsSync);
 assert.ok(browser, 'Chrome or Edge was not found. Set CHROME_PATH to a Chromium browser.');
 
-const topLevelLinks = ['Compare', 'Stock-Up', 'Coupons', 'More'];
+const topLevelLinks = ['Compare', 'BOGO', 'Coupons', 'More'];
 const moreLinks = ['Usage', 'Guides', 'Shopping Examples', 'Methodology', 'About', 'Contact'];
 const exactWidths = [320, 360, 375, 390, 412, 430, 679, 680, 768, 1024, 1440];
-const routes = ['/', '/404', '/about/', '/contact/', '/coupon-comparator/', '/guides/', '/guides/bigger-vs-smaller-package/', '/guides/how-to-compare-unit-prices/', '/guides/mixed-unit-comparisons/', '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/when-lowest-unit-price-isnt-enough/', '/how-we-calculate/', '/methodology/', '/privacy/', '/shopping-examples/', '/stock-up-calculator/', '/terms/', '/usage-tracker/'];
+const routes = ['/', '/404', '/about/', '/bogo-calculator/', '/contact/', '/coupon-comparator/', '/guides/', '/guides/bigger-vs-smaller-package/', '/guides/how-to-compare-unit-prices/', '/guides/mixed-unit-comparisons/', '/guides/multipacks-bogo-multibuy/', '/guides/sale-price-vs-unit-price/', '/guides/when-lowest-unit-price-isnt-enough/', '/how-we-calculate/', '/methodology/', '/privacy/', '/shopping-examples/', '/terms/', '/usage-tracker/'];
 const siteWideWidths = [320, 430, 768, 1024, 1440];
 const port = 9300 + Math.floor(Math.random() * 500);
 const profile = mkdtempSync(join(tmpdir(), 'wdb-responsive-'));
@@ -80,32 +80,29 @@ try {
     const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,`coupon-${width}.png`);writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`);
   }
 
-  await navigate('/stock-up-calculator/',375);
-  let stockUpState=await evaluate(`(()=>{const usage=document.querySelector('[data-field="amountPerDay"]');const initial=usage.value;usage.stepUp();const stepped=usage.value;const fields={salePrice:'9.99',normalPrice:'14.99',amountPerPackage:'16',packageCount:'5',amountPerDay:'0.5'};for(const [name,value] of Object.entries(fields)){const input=document.querySelector('[data-field="'+name+'"]');input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}))}const result=document.querySelector('[data-results]');return{initial,stepped,headline:result.querySelector('h3')?.textContent,summary:result.querySelector('h3+p')?.textContent,metrics:[...result.querySelectorAll('.metric-grid li')].map(item=>item.textContent.trim()),overflow:document.documentElement.scrollWidth>innerWidth}})()`);
-  assert.equal(stockUpState.initial,'','Daily usage starts blank');
-  assert.equal(stockUpState.stepped,'1','Empty daily-usage spinner starts at 1');
-  assert.equal(stockUpState.headline,'Save $25.00 and get about 160 days of supply');
-  assert.equal(stockUpState.summary,'Buying 5 packages at $9.99 saves you $25.00 compared with the normal price of $14.99. You’ll spend $49.95 today instead of $74.95, and the 80 oz purchased may last about 160 days at your estimated usage.');
-  assert.deepEqual(stockUpState.metrics,['You pay today$49.95','Normal cost for 5 packages$74.95','Total savings$25.00 (33.4%)','Estimated supplyabout 160 days']);
-  assert.equal(stockUpState.overflow,false,'Stock-up result fits a 375px viewport');
+  await navigate('/bogo-calculator/',375);
+  let bogoState=await evaluate(`(()=>{const root=document.querySelector('[data-bogo-calculator]');const set=(selector,value)=>{const field=root.querySelector(selector);field.value=value;field.dispatchEvent(new Event('input',{bubbles:true}))};set('[data-a="pricePerItem"]','8');set('[data-a="buyQuantity"]','2');set('[data-a="getQuantity"]','1');set('[data-a="quantity"]','5');set('[data-b="pricePerItem"]','7');set('[data-b="quantity"]','5');const result=root.querySelector('[data-results]');return{headline:result.querySelector('h3')?.textContent,summary:result.querySelector('.comparison-summary')?.textContent,cards:[...result.querySelectorAll('.offer-result')].map(card=>card.innerText.replace(/\\s+/g,' ').trim()),overflow:document.documentElement.scrollWidth>innerWidth}})()`);
+  assert.equal(bogoState.headline,'Offer A costs $3.00 less');
+  assert.equal(bogoState.summary,'You save $3.00 with Offer A.');
+  assert.match(bogoState.cards[0],/Checkout total \$32\.00/);
+  assert.match(bogoState.cards[0],/Effective price per item \$6\.40/);
+  assert.match(bogoState.cards[0],/remaining 2 items cost full price/);
+  assert.match(bogoState.cards[1],/Checkout total \$35\.00/);
+  assert.equal(bogoState.overflow,false,'BOGO result fits a 375px viewport');
+  { const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,'bogo-375.png');writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`); }
 
-  stockUpState=await evaluate(`(()=>{const root=document.querySelector('[data-stockup]');root.querySelector('[data-reset]').click();const resetValues=Object.fromEntries([...root.querySelectorAll('[data-field]')].map(item=>[item.dataset.field,item.value]));const resetText=root.querySelector('[data-results]').textContent.trim();const values={salePrice:'0',normalPrice:'14.99',amountPerPackage:'16',packageCount:'5',amountPerDay:'1'};for(const [name,value] of Object.entries(values)){const input=root.querySelector('[data-field="'+name+'"]');input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}))}const invalidText=root.querySelector('[data-results]').textContent.trim();return{resetValues,resetText,invalidText}})()`);
-  assert.equal(stockUpState.resetValues.amountPerDay,'','Reset clears daily usage');
-  assert.equal(stockUpState.resetValues.packageCount,'1','Reset restores one package');
-  assert.match(stockUpState.resetText,/Enter prices/);
-  assert.match(stockUpState.invalidText,/Check the details/);
-  assert.doesNotMatch(stockUpState.invalidText,/NaN|Infinity/);
-
-  await evaluate(`localStorage.setItem('whichdealsbetter.usage.v1',JSON.stringify([{id:'browser-check',name:'Paper Towels',amount:12,unit:'roll',startDate:'2026-01-01',completedDate:'2026-02-12',createdAt:'2026-01-01T00:00:00Z'}]))`);
-  await navigate('/stock-up-calculator/',375);
-  stockUpState=await evaluate(`(()=>{const history=document.querySelector('[data-history]');history.selectedIndex=1;history.dispatchEvent(new Event('change',{bubbles:true}));const state={rate:document.querySelector('[data-field="amountPerDay"]').value,name:document.querySelector('[data-field="name"]').value,unit:document.querySelector('[data-field="unit"]').value,source:document.querySelector('[data-source]').textContent};localStorage.removeItem('whichdealsbetter.usage.v1');return state})()`);
-  assert.ok(Math.abs(Number(stockUpState.rate)-(12/42))<1e-12,'Tracker history fills the weighted daily rate');
-  assert.equal(stockUpState.name,'Paper Towels');
-  assert.equal(stockUpState.unit,'roll');
-  assert.match(stockUpState.source,/weighted average from 1 completed tracker period/);
+  bogoState=await evaluate(`(()=>{const root=document.querySelector('[data-bogo-calculator]');const set=(selector,value)=>{const field=root.querySelector(selector);field.value=value;field.dispatchEvent(new Event('input',{bubbles:true}))};set('[data-a="quantity"]','4');set('[data-b="pricePerItem"]','7');set('[data-b="quantity"]','2');const result=root.querySelector('[data-results]');const different={headline:result.querySelector('h3')?.textContent,summary:result.querySelector('.comparison-summary')?.textContent,detail:result.querySelector('.comparison-detail')?.innerText.replace(/\\s+/g,' ').trim()};const type=root.querySelector('[data-discount-type]');type.value='percent';type.dispatchEvent(new Event('change',{bubbles:true}));const percentVisible=!root.querySelector('[data-percent-wrap]').hidden;root.querySelector('[data-reset]').click();const reset={priceA:root.querySelector('[data-a="pricePerItem"]').value,priceB:root.querySelector('[data-b="pricePerItem"]').value,buy:root.querySelector('[data-a="buyQuantity"]').value,get:root.querySelector('[data-a="getQuantity"]').value,quantityA:root.querySelector('[data-a="quantity"]').value,quantityB:root.querySelector('[data-b="quantity"]').value,type:type.value,percentHidden:root.querySelector('[data-percent-wrap]').hidden,resultText:root.querySelector('[data-results]').textContent.trim()};set('[data-a="pricePerItem"]','-1');set('[data-b="pricePerItem"]','7');const invalid=root.querySelector('[data-results]').textContent.trim();return{different,percentVisible,reset,invalid}})()`);
+  assert.equal(bogoState.different.headline,'Offer A has the lower price per item');
+  assert.match(bogoState.different.summary,/checkout totals are not a like-for-like savings comparison/);
+  assert.match(bogoState.different.detail,/Offer B has the lower checkout total by \$10\.00/);
+  assert.match(bogoState.different.detail,/Offer A costs \$1\.00 less per item/);
+  assert.equal(bogoState.percentVisible,true,'Percentage field appears for percentage-off promotions');
+  assert.deepEqual(bogoState.reset,{priceA:'',priceB:'',buy:'1',get:'1',quantityA:'2',quantityB:'2',type:'free',percentHidden:true,resultText:'Enter a price per item for both offers to compare the promotion.'});
+  assert.match(bogoState.invalid,/Check the details/);
+  assert.doesNotMatch(bogoState.invalid,/NaN|Infinity/);
 
   for(const [width,name] of [[320,'mobile-320'],[768,'tablet-768'],[1024,'desktop-1024']]){await navigate('/',width);await evaluate(`document.querySelector('[data-more-toggle]').click()`);const image=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=join(screenshots,`${name}.png`);writeFileSync(path,Buffer.from(image.data,'base64'));console.log(`Screenshot: ${path}`)}
-  console.log(`PASS: four-item navigation at ${exactWidths.join(', ')}px; ${routes.length} routes at ${siteWideWidths.join(', ')}px; More toggle, outside click, link selection, Escape, ARIA state, viewport bounds, currency input alignment, and stock-up interactions verified.`);
+  console.log(`PASS: four-item navigation at ${exactWidths.join(', ')}px; ${routes.length} routes at ${siteWideWidths.join(', ')}px; More toggle, outside click, link selection, Escape, ARIA state, viewport bounds, currency input alignment, and BOGO interactions verified.`);
 } finally {
   client?.close(); processHandle.kill(); try{rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100})}catch{}
 }

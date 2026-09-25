@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BogoCalculator from '../components/BogoCalculator.astro';
+import { siteConfig } from '../config/site';
+const title = 'Buy X Get Y & BOGO Calculator | WhichDealsBetter';
+const description = 'Calculate the real cost of Buy One Get One, Buy 2 Get 1 Free, and other Buy X Get Y promotions and compare the effective price with another deal.';
+const url = new URL('/bogo-calculator/', siteConfig.url).toString();
+const schema = { '@context':'https://schema.org', '@type':'WebApplication', name:'Buy X Get Y Calculator', url, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}, description };
+---
+<BaseLayout {title} {description} {schema}>
+  <section class="tool-hero"><div class="shell prose"><p class="eyebrow">Promotion math made clear</p><h1>Is the BOGO deal actually cheaper?</h1><p>Calculate the real price of Buy X Get Y promotions and compare them with another sale or regular price.</p></div></section>
+  <div class="shell calculator-wrap"><BogoCalculator /></div>
+  <section class="content-section alt"><div class="shell prose"><h2>How complete promotion groups work</h2><p>A Buy 2 Get 1 offer forms groups of three. If you need five items, one group qualifies and the remaining two items cost full price. The calculator never rounds five items up to six or assumes every quantity divides evenly.</p><p>For percentage offers, the discount applies only to the “Get” items in each complete group. Buy 1 Get 1 50% off at $10 costs $15 for two items and $30 for four.</p><h2>Compare checkout cost and price per item</h2><p>A smaller purchase can have the lower checkout total while a larger promotion has the lower effective price per item. When the quantities differ, the result shows both winners separately instead of treating the checkout difference as savings.</p><p>Offer rules can vary. Confirm that the items are eligible, equally priced, and available in the quantity entered. This calculator assumes identical items at one price and does not decide which differently priced item receives a discount.</p></div></section>
+</BaseLayout>
