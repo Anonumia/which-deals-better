@@ -32,11 +32,23 @@ describe('Buy X Get Y calculations', () => {
     expect(result.completeGroups).toBe(1);
   });
 
-  it('calculates Buy 1 Get 1 50% Off', () => {
-    const result = calculateBogoOffer(promotion({ discountType: 'percent', discountPercent: 50, quantity: 2 }))!;
+  it('automatically calculates Buy 1 Get 1 50% Off without a custom percentage', () => {
+    const result = calculateBogoOffer(promotion({ discountType: 'half', discountPercent: '', quantity: 2 }))!;
     expect(result.checkoutTotal).toBe(15);
     expect(result.effectivePrice).toBe(7.5);
     expect(result.promotionSavings).toBe(5);
+  });
+
+  it('ignores a stale custom percentage in 50% off mode', () => {
+    const result = calculateBogoOffer(promotion({ discountType: 'half', discountPercent: 80 }))!;
+    expect(result.checkoutTotal).toBe(15);
+    expect(result.promotionSavings).toBe(5);
+  });
+
+  it('calculates a custom Percentage off promotion', () => {
+    const result = calculateBogoOffer(promotion({ discountType: 'percent', discountPercent: 25 }))!;
+    expect(result.checkoutTotal).toBe(17.5);
+    expect(result.promotionSavings).toBe(2.5);
   });
 
   it('accepts 0% and charges every item at full price', () => {

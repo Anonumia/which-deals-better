@@ -7,7 +7,7 @@
       <label class="full-field">Offer name <span>(optional)</span><input data-a="name" maxlength="80" placeholder="Store BOGO" autocomplete="off" /></label>
       <div class="field-row"><label>Price per item<span class="input-prefix"><span aria-hidden="true">$</span><input data-a="pricePerItem" type="number" min="0.01" step="0.01" inputmode="decimal" autocomplete="off" /></span></label><label>Quantity needed<input data-a="quantity" type="number" min="1" step="1" inputmode="numeric" value="2" /></label></div>
       <div class="field-row quantity-row"><label>Buy<input data-a="buyQuantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label><label>Get<input data-a="getQuantity" type="number" min="1" step="1" inputmode="numeric" value="1" /></label></div>
-      <div class="field-row"><label>Get item discount<select data-a="discountType" data-discount-type aria-controls="get-discount-percent"><option value="free">Free · 100% off</option><option value="percent">Percentage off</option></select></label><label id="get-discount-percent" data-percent-wrap hidden>Percentage discount<input data-a="discountPercent" type="number" min="0" max="100" step="any" inputmode="decimal" autocomplete="off" /></label></div>
+      <div class="field-row"><label>Get item discount<select data-a="discountType" data-discount-type aria-controls="get-discount-percent"><option value="free">Free · 100% off</option><option value="half">50% off</option><option value="percent">Percentage off</option></select></label><label id="get-discount-percent" data-percent-wrap hidden>Percentage discount<input data-a="discountPercent" type="number" min="0" max="100" step="any" inputmode="decimal" autocomplete="off" /></label></div>
     </fieldset>
     <fieldset class="deal-card" data-offer-b>
       <legend>Offer B · Compare price</legend>
@@ -74,7 +74,7 @@
         pricePerItem: priceA,
         buyQuantity: value('[data-a="buyQuantity"]'),
         getQuantity: value('[data-a="getQuantity"]'),
-        discountType: value('[data-a="discountType"]') as 'free' | 'percent',
+        discountType: value('[data-a="discountType"]') as 'free' | 'half' | 'percent',
         discountPercent: value('[data-a="discountPercent"]'),
         quantity: value('[data-a="quantity"]'),
       }, {

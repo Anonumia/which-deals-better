@@ -1,4 +1,4 @@
-export type GetDiscountType = 'free' | 'percent';
+export type GetDiscountType = 'free' | 'half' | 'percent';
 
 export interface BogoOfferInput {
   pricePerItem: unknown;
@@ -60,7 +60,7 @@ export function calculateBogoOffer(input: BogoOfferInput): BogoOfferCost | null 
   const buyQuantity = whole(input.buyQuantity);
   const getQuantity = whole(input.getQuantity);
   const quantity = whole(input.quantity);
-  const enteredDiscount = input.discountType === 'free' ? 100 : nonNegative(input.discountPercent);
+  const enteredDiscount = input.discountType === 'free' ? 100 : input.discountType === 'half' ? 50 : nonNegative(input.discountPercent);
   if (pricePerItem === null || buyQuantity === null || getQuantity === null || quantity === null || enteredDiscount === null || enteredDiscount > 100) return null;
 
   const groupSize = buyQuantity + getQuantity;
